@@ -1,0 +1,6 @@
+class XX{
+    XX(){}
+}
+
+int main() {
+}
