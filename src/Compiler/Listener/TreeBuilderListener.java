@@ -1,5 +1,6 @@
 package Compiler.Listener;
 
+import Compiler.ErrorMessege.CompilationError;
 import Compiler.Expression.*;
 import Compiler.Expression.BinaryExpression.*;
 import Compiler.Expression.ConstantExpression.BoolConst;
@@ -97,6 +98,7 @@ public class TreeBuilderListener extends BaseListener {
         ctx.statement().forEach(statementContext -> {
             ((BlockStatement)mapping.get(ctx)).addStatement((Statement)mapping.get(statementContext));
         });
+        Table.popScope();
     }
 
     @Override
@@ -227,10 +229,10 @@ public class TreeBuilderListener extends BaseListener {
         Expression expression = (Expression)mapping.get(ctx.expression());
         if (ctx.operator.getText().equals("++")) {
             mapping.put(ctx, SuffAddExpression.getExpression(expression));
-        } else if (ctx.operator.equals("--")) {
+        } else if (ctx.operator.getText().equals("--")) {
             mapping.put(ctx, SuffDecExpression.getExpression(expression));
         } else {
-            throw new Error();
+            throw new CompilationError("Internal Error");
         }
     }
 

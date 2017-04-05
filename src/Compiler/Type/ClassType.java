@@ -60,4 +60,11 @@ public class ClassType extends Type implements Scope, ASTNode{
         return member;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof NullType || obj == this) {
+            return true;
+        }
+        return false;
+    }
 }

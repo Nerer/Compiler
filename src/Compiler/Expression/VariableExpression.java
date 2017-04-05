@@ -1,4 +1,5 @@
 package Compiler.Expression;
+import Compiler.ErrorMessege.CompilationError;
 import Compiler.Symbol.*;
 import Compiler.Type.*;
 import Compiler.Table.Table;
@@ -14,7 +15,7 @@ public class VariableExpression extends Expression {
 
     public static Expression getExpression(String name) {
         if (!Table.symbolTable.contains(name)) {
-            throw new Error();
+            throw new CompilationError("VarError");
         }
         Symbol symbol = Table.symbolTable.getSymbol(name);
         if (symbol.scope instanceof ClassType) {

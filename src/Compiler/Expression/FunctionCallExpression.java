@@ -1,5 +1,6 @@
 package Compiler.Expression;
 
+import Compiler.ErrorMessege.CompilationError;
 import Compiler.Type.*;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class FunctionCallExpression extends Expression {
                 parameters.add(0, ((MemberExpression)expression).expression);
             }
             if (parameters.size() != function.parameters.size()) {
-                throw new Error();
+                throw new CompilationError("FunctionCallError");
             }
             for (int i = 0; i < (int)parameters.size(); i++) {
                 if (i == 0 && expression instanceof MemberExpression) {

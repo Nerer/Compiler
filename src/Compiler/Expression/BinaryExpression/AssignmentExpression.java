@@ -1,5 +1,6 @@
 package Compiler.Expression.BinaryExpression;
 
+import Compiler.ErrorMessege.CompilationError;
 import Compiler.Expression.Expression;
 import Compiler.Type.Type;
 /**
@@ -16,7 +17,8 @@ public class AssignmentExpression extends BinaryExpression {
         if (rhs.type.equals(lhs.type)) {
             return new AssignmentExpression(lhs.type, false, lhs, rhs);
         }
-        throw new Error();
+
+        throw new CompilationError("assign error");
     }
 
     @Override

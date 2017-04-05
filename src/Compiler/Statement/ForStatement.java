@@ -21,6 +21,8 @@ public class ForStatement extends LoopStatement {
     public void addCondition(Expression expression) {
         if (expression.type instanceof BoolType) {
             this.condition = expression;
+        } else {
+            throw new Error();
         }
     }
     public void addOperation(Expression expression) {

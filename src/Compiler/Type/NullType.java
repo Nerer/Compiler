@@ -12,7 +12,7 @@ public class NullType extends Type{
     @Override
     public boolean equals(Object obj) {
         if (obj != null) {
-            if (obj instanceof ArrayType || obj instanceof StringType || obj instanceof NullType) {
+            if (obj instanceof ArrayType || obj instanceof ClassType || obj instanceof NullType) {
                 return true;
             }
         }

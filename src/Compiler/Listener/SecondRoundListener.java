@@ -30,7 +30,7 @@ public class SecondRoundListener extends BaseListener {
                 throw new Error();
             }
         }
-        List<Symbol> parameters = new ArrayList<Symbol>();
+        List<Symbol> parameters = new ArrayList<>();
         if (classType != null) {
             parameters.add(new Symbol(classType, "this"));
         }
