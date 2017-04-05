@@ -16,11 +16,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.*;
-import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        InputStream is = new FileInputStream("//Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/test.txt");
+        InputStream is = new FileInputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/test.txt");
         InputStreamReader Src = new InputStreamReader(is);
         ANTLRInputStream input = new ANTLRInputStream(Src);
         MotherKnowsBestLexer lexer = new MotherKnowsBestLexer(input);

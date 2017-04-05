@@ -1,4 +1,4 @@
-// Generated from /Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler.Parser/MotherKnowsBest.g4 by ANTLR 4.6
+// Generated from /Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/Parser/MotherKnowsBest.g4 by ANTLR 4.6
 package Compiler.Parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 

@@ -30,7 +30,7 @@ public class ScopeTable {
         if (now instanceof FunctionType) {
             functionScope.push((FunctionType) now);
         }
-        if (now instanceof IfStatement) {
+        if (now instanceof LoopStatement) {
             loopScope.push((LoopStatement) now);
         }
     }

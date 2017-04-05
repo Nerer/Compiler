@@ -45,25 +45,43 @@ public class Table {
 
     public static void addDefaultFunctions() {
         ArrayList<Symbol> parameters = new ArrayList<>();
-        parameters.clear();
         parameters.add(new Symbol(Table.myString, "string"));
         symbolTable.addSymbol("print", FunctionType.getFunction("print", Table.myVoid, parameters));
-        parameters.clear();
+
+        parameters = new ArrayList<>();
         parameters.add(new Symbol(Table.myString, "string"));
         symbolTable.addSymbol("println", FunctionType.getFunction("println", Table.myVoid, parameters));
-        parameters.clear();
+
+        parameters = new ArrayList<>();
         symbolTable.addSymbol("getString", FunctionType.getFunction("getString", Table.myString, parameters));
+
+        parameters = new ArrayList<>();
         symbolTable.addSymbol("getInt", FunctionType.getFunction("getInt", Table.myInt, parameters));
+
+        parameters = new ArrayList<>();
         parameters.add(new Symbol(Table.myInt,"int"));
         symbolTable.addSymbol("toString", FunctionType.getFunction("toString", Table.myString, parameters));
-        parameters.clear();
+
+        parameters = new ArrayList<>();
+        parameters.add(new Symbol(Table.myString, "this"));
         symbolTable.addSymbol("Mx_builtin_str_length", FunctionType.getFunction("Mx_builtin_str_length", Table.myInt, parameters));
+
+        parameters = new ArrayList<>();
+        parameters.add(new Symbol(Table.myString, "this"));
         symbolTable.addSymbol("Mx_builtin_str_parseInt", FunctionType.getFunction("Mx_builtin_str_parseInt", Table.myInt, parameters));
+
+        parameters = new ArrayList<>();
+        parameters.add(new Symbol(Table.myVoid, "this"));
         symbolTable.addSymbol("Mx_builtin_arr_size", FunctionType.getFunction("Mx_builtin_arr_size", Table.myInt, parameters));
+
+        parameters = new ArrayList<>();
+        parameters.add(new Symbol(Table.myString, "this"));
         parameters.add(new Symbol(Table.myInt, "left"));
         parameters.add(new Symbol(Table.myInt, "right"));
-        symbolTable.addSymbol("Mx__builtin_str_substring", FunctionType.getFunction("Mx_builtin_str_substring", Table.myString, parameters));
-        parameters.clear();
+        symbolTable.addSymbol("Mx_builtin_str_substring", FunctionType.getFunction("Mx_builtin_str_substring", Table.myString, parameters));
+
+        parameters = new ArrayList<>();
+        parameters.add(new Symbol(Table.myString, "this"));
         parameters.add(new Symbol(Table.myInt, "i"));
         symbolTable.addSymbol("Mx_builtin_str_ord", FunctionType.getFunction("Mx_builtin_str_ord", Table.myInt, parameters));
     }

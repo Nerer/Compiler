@@ -35,10 +35,10 @@ public class MemberExpression extends Expression {
                         return new MemberExpression(Table.symbolTable.getSymbol("Mx_builtin_str_parseInt").type, false, expression, memberName);
                     }
                     if (memberName.equals("substring")) {
-                        return new MemberExpression(Table.symbolTable.getSymbol("Mx_builtin_str_subtring").type, false, expression, memberName);
+                        return new MemberExpression(Table.symbolTable.getSymbol("Mx_builtin_str_substring").type, false, expression, memberName);
                     }
                     if (memberName.equals("ord")) {
-                        return new MemberExpression(Table.symbolTable.getSymbol("Mx_bultin_str_ord").type, false, expression, memberName);
+                        return new MemberExpression(Table.symbolTable.getSymbol("Mx_builtin_str_ord").type, false, expression, memberName);
                     }
                 }
             }

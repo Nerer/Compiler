@@ -33,7 +33,7 @@ public class FunctionCallExpression extends Expression {
                 if (i == 0 && expression instanceof MemberExpression) {
                     continue;
                 }
-                if (!parameters.get(i).type.equals(function.parameters.get(i))) {
+                if (!parameters.get(i).type.equals(function.parameters.get(i).type)) {
                     throw new Error();
                 }
             }

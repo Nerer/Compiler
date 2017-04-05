@@ -17,8 +17,9 @@ public class WhileStatement extends LoopStatement {
     public void addCondition(Expression expression) {
         if (expression.type instanceof BoolType) {
             this.condition = expression;
+        } else {
+            throw new Error();
         }
-        throw new Error();
     }
     public void addStatement(Statement statement) {
         this.statement = statement;

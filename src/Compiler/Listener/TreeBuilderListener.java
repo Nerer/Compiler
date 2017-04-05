@@ -271,6 +271,10 @@ public class TreeBuilderListener extends BaseListener {
         boolean lastNull = false;
         int nullCounter = 0;
         for (int i = 0; i < ctx.children.size(); i++) {
+            if (!(ctx.children.get(i) instanceof TerminalNode)) {
+                space = false;
+                continue;
+            }
             Token token = ((TerminalNode)ctx.children.get(i)).getSymbol();
             if (token.getText().equals("]")) {
                 if (space) {
