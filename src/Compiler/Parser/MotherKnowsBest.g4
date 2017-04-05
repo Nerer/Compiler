@@ -2,7 +2,7 @@ grammar MotherKnowsBest;
 
 program : (classDeclaration | functionDeclaration | varDeclaration)+;
 
-classDeclaration : 'class' IDENTIFIER '{' (varDeclaration | functionDeclaration)+ '}';
+classDeclaration : 'class' IDENTIFIER '{' (varDeclaration | functionDeclaration)* '}';
 
 functionDeclaration : type IDENTIFIER? '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' blockStatement;
 
