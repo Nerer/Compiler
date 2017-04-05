@@ -24,7 +24,7 @@ public class FunctionType extends Type implements ASTNode, Scope {
         this.parameters = parameters;
     }
     public static FunctionType getFunction(String name, Type returnType, List<Symbol> parameters) {
-        if (name == "main") {
+        if (name.equals("main")) {
             if (!(returnType instanceof IntType)) {
                 throw new Error();
             }
