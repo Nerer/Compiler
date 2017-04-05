@@ -7,7 +7,7 @@
 
 set -e
 cd "$(dirname "$0")"
-export CCHK="java -classpath ./lib/antlr-4.6-complete.jar:./bin Main"
+export CCHK="java -classpath ./lib/antlr-4.6-complete.jar:./bin Compiler.Main"
 mkdir -p /Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/
 cat > /Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/test.txt   # save everything in stdin to program.txt
 $CCHK
