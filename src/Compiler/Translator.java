@@ -212,7 +212,7 @@ public class Translator {
                                 output.printf("\tnot %s\n", NASMRegister.r10);
                             }
                             if (instr instanceof SelfMinusInstruction) {
-                                output.printf("\tneg %s, %s\n", NASMRegister.r10);
+                                output.printf("\tneg %s\n", NASMRegister.r10);
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
                         }

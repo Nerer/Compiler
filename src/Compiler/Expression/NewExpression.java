@@ -68,6 +68,9 @@ public class NewExpression extends Expression{
     public Operand boomshakalaka(List<Instruction> instructions, int dim) {
         Operand size = Table.registerTable.addTemp();
         Operand dest = Table.registerTable.addTemp();
+        if (dim == 0 && expressions.get(dim) == null) {
+            return dest;
+        }
         instructions.add(MoveInstruction.getInstruction(size, expressions.get(dim).operand));
         instructions.add(AddInstruction.getInstruction(size, size, Immediate.getImmediate(1)));
         instructions.add(MulInstruction.getInstruction(size, size, Immediate.getImmediate(8)));
@@ -80,7 +83,7 @@ public class NewExpression extends Expression{
         if (type instanceof ClassType && dim + 1 == expressions.size() && expressions.get(dim) != null) {
             flag = 1;
         }
-        if (dim + 1 < expressions.size()) {
+        if (dim + 1 < expressions.size() && expressions.get(dim + 1) != null) {
             flag = 2;
         }
 
