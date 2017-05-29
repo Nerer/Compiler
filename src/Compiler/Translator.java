@@ -40,10 +40,13 @@ public class Translator {
         return String.format("____%s_%d____%s", block.function.name, block.identity, block.name);
     }
 
+    String getGlobalName(String name) {
+        return "GLOBAL_V_" + name;
+    }
     void load(Graph graph, String reg, Operand operand) {
         if (operand instanceof VRegister) {
             if (operand instanceof GlobalRegister) {
-                output.printf("\tmov %s, %s\n", reg, String.format("[rel %s]", ((GlobalRegister)operand).symbol.name));
+                output.printf("\tmov %s, %s\n", reg, String.format("[rel %s]", getGlobalName(((GlobalRegister)operand).symbol.name)));
             } else {
                 if (operand instanceof StringRegister) {
                     output.printf("\tmov %s, %s\n", reg, ((StringRegister)operand).message());
@@ -68,7 +71,7 @@ public class Translator {
         output.printf("extern printf, malloc, strcpy, scanf, strlen, sscanf, sprintf, memcpy, strcmp, puts\n");
         for (VRegister register : Table.registerTable.registers) {
             if (register instanceof GlobalRegister) {
-                output.printf("global %s\n", ((GlobalRegister)register).symbol.name);
+                output.printf("global %s\n", getGlobalName(((GlobalRegister)register).symbol.name));
             }
         }
 
@@ -262,10 +265,7 @@ public class Translator {
                         if (instruction instanceof CallInstruction) {
                             CallInstruction call = (CallInstruction)instruction;
                             FunctionType callFunction = call.function;
-                            if ((nowRsp + 8) % 16 != 0) {
-                                output.printf("\tsub %s 8\n", NASMRegister.rsp);
-                                nowRsp += 8;
-                            }
+
                             if (callFunction.name.startsWith("Mx_builtin_")) {
                                 if (callFunction.parameters.size() >= 1) {
                                     load(graph, NASMRegister.rdi, call.parameters.get(0));
@@ -283,11 +283,23 @@ public class Translator {
                                 for (int p = 0; p < callFunction.parameters.size(); p++) {
                                     load(graph, NASMRegister.r10, call.parameters.get(p));
                                     int offset = callFunction.graph.getOffset(callFunction.parameters.get(p).register);
-                                    int fuck = callFunction.graph.getRegisters() * 8 + 24;
-                                    output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset), NASMRegister.r10);
+                                    int fuck = callFunction.graph.getRegisters() * 8 + 24 + 8;
+                                    if ((nowRsp + 8) % 16 != 0) {
+                                        output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset + 8), NASMRegister.r10);
+                                    } else {
+                                        output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset), NASMRegister.r10);
+                                    }
                                 }
                             }
-                            output.printf("\tcall %s\n", getFunctionName(callFunction));
+                            if ((nowRsp + 8) % 16 != 0) {
+                                output.printf("\tsub %s, 8\n", NASMRegister.rsp);
+                                nowRsp += 8;
+                                output.printf("\tcall %s\n", getFunctionName(callFunction));
+                                nowRsp -= 8;
+                                output.printf("\tadd %s, 8\n", NASMRegister.rsp);
+                            } else {
+                                output.printf("\tcall %s\n", getFunctionName(callFunction));
+                            }
                             if (call.target != null) {
                                 output.printf("\tmov %s, %s\n", graph.getMemory(call.target), NASMRegister.rax);
                             }
@@ -308,8 +320,12 @@ public class Translator {
                             if ((nowRsp + 8) % 16 != 0) {
                                 output.printf("\tsub rsp, 8\n");
                                 nowRsp += 8;
+                                output.printf("\tcall malloc\n");
+                                nowRsp -= 8;
+                                output.printf("\tadd rsp, 8\n");
+                            } else {
+                                output.printf("\tcall malloc\n");
                             }
-                            output.printf("\tcall malloc\n");
                             output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
                         }
                         if (instruction instanceof LoadInstruction) {

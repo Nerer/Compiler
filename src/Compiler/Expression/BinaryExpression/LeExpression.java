@@ -25,7 +25,7 @@ public class LeExpression extends BinaryExpression {
 
     public static Expression getExpression(Expression lhs, Expression rhs) {
         if (lhs.type instanceof IntType && rhs.type instanceof IntType) {
-            return new LessExpression(Table.myBool,false, lhs, rhs);
+            return new LeExpression(Table.myBool,false, lhs, rhs);
         }
         if (lhs.type instanceof StringType && rhs.type instanceof StringType) {
            // return new LessExpression(Table.myBool, false, lhs, rhs);

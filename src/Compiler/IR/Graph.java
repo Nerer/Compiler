@@ -85,10 +85,12 @@ public class Graph {
     public int getOffset(VRegister reg) {
         return mapping.get(reg) * 8 + 8;
     }
-
+    public String getGlobalName(String name) {
+        return "GLOBAL_V_" + name;
+    }
     public String getMemory(VRegister reg) {
         if (reg instanceof GlobalRegister) {
-            return String.format("qword [rel %s]", ((GlobalRegister)reg).symbol.name);
+            return String.format("qword [rel %s]", getGlobalName(((GlobalRegister)reg).symbol.name));
         } else {
             return String.format("qword [rsp+%d]", getOffset(reg));
         }

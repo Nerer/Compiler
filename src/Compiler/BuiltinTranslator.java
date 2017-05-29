@@ -81,12 +81,14 @@ public class BuiltinTranslator {
         str.append(BuiltinTranslator.getInstruction("db", "\"%ld\", 0"));
         return str.toString();
     }
-
+    static public String getGlobalName(String name) {
+        return "GLOBAL_V_" + name;
+    }
     static public String getBssSection() {
         StringBuilder str = new StringBuilder();
         str.append("SECTION .bss\n");
         for (VarDeclarationStatement varStatement : Table.program.variables) {
-            str.append(String.format("%s:\n", varStatement.symbol.name));
+            str.append(String.format("%s:\n", getGlobalName(varStatement.symbol.name)));
             str.append(BuiltinTranslator.getInstruction("resq", "1"));
         }
         str.append("@getIntBuf:\n");
