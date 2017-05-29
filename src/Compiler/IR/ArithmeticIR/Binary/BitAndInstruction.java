@@ -24,7 +24,7 @@ public class BitAndInstruction extends BinaryInstruction{
         if (source1 instanceof Immediate && source2 instanceof Immediate) {
             int val1 = ((Immediate)source1).value;
             int val2 = ((Immediate)source2).value;
-            return MoveInstruction.getInstruction(target, new Immediate(val1 + val2));
+            return MoveInstruction.getInstruction(target, new Immediate(val1 & val2));
         }
         return this;
     }

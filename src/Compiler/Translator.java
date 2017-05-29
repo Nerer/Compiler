@@ -127,17 +127,17 @@ public class Translator {
                                 output.printf("\tadd %s, %s\n", NASMRegister.r10, NASMRegister.r11);
                             }
                             if (instr instanceof BitAndInstruction) {
-                                output.printf("\tadd %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                                output.printf("\tand %s, %s\n", NASMRegister.r10, NASMRegister.r11);
                             }
                             if (instr instanceof BitLeftShiftInstruction) {
-                                output.printf("\tmov %s, %s\n",  NASMRegister.cl, NASMRegister.r11);
+                                output.printf("\tmov %s, %s\n",  NASMRegister.rcx, NASMRegister.r11);
                                 output.printf("\tsal %s, %s\n", NASMRegister.r10, NASMRegister.cl);
                             }
                             if (instr instanceof BitOrInstruction) {
                                 output.printf("\tor %s, %s\n", NASMRegister.r10, NASMRegister.r11);
                             }
                             if (instr instanceof BitRightShiftInstruction) {
-                                output.printf("\tmov %s, %s\n",  NASMRegister.cl, NASMRegister.r11);
+                                output.printf("\tmov %s, %s\n",  NASMRegister.rcx, NASMRegister.r11);
                                 output.printf("\tsar %s, %s\n", NASMRegister.r10, NASMRegister.cl);
                             }
                             if (instr instanceof BitXorInstruction) {
