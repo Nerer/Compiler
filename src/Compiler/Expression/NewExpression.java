@@ -96,9 +96,9 @@ public class NewExpression extends Expression{
             instructions.add(AddInstruction.getInstruction(size, size, dest));
             address = new Address((VRegister)size);
             if (flag == 1) {
-                instructions.add(StoreInstruction.getInstruction(address, newClass(type, instructions)));
+                instructions.add(StoreInstruction.getInstruction(newClass(type, instructions), address));
             } else {
-                instructions.add(StoreInstruction.getInstruction(address, boomshakalaka(instructions, dim + 1)));
+                instructions.add(StoreInstruction.getInstruction(boomshakalaka(instructions, dim + 1), address));
             }
             LabelInstruction merge = new LabelInstruction("while_merge");
             VRegister conditon = Table.registerTable.addTemp();
