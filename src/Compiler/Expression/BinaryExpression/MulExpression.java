@@ -2,9 +2,14 @@ package Compiler.Expression.BinaryExpression;
 
 
 import Compiler.Expression.Expression;
+import Compiler.IR.ArithmeticIR.Binary.BitLeftShiftInstruction;
+import Compiler.IR.ArithmeticIR.Binary.MulInstruction;
+import Compiler.IR.Instruction;
 import Compiler.Type.Type;
 import Compiler.Type.IntType;
 import Compiler.Table.Table;
+
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/4.
@@ -23,5 +28,15 @@ public class MulExpression extends BinaryExpression {
     @Override
     public String toString() {
         return "MulExpression";
+    }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        lhs.emit(instructions);
+        lhs.load(instructions);
+        rhs.emit(instructions);
+        rhs.load(instructions);
+        operand = Table.registerTable.addTemp();
+        instructions.add(MulInstruction.getInstruction(operand, lhs.operand, rhs.operand));
     }
 }

@@ -1,9 +1,11 @@
 package Compiler.Statement;
 
 
+import Compiler.IR.Instruction;
 import Compiler.Scope.Scope;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/2.
@@ -31,5 +33,8 @@ public class BlockStatement extends Statement implements Scope{
         return ret;
     }
 
-
+    @Override
+    public void emit(List<Instruction> instructions) {
+        statements.forEach(statement -> statement.emit(instructions));
+    }
 }

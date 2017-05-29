@@ -1,9 +1,17 @@
 package Compiler.Expression.UnaryExpression;
 
+import Compiler.IR.Address;
+import Compiler.IR.ArithmeticIR.Binary.AddInstruction;
+import Compiler.IR.Immediate;
+import Compiler.IR.Instruction;
+import Compiler.IR.MemoryIR.MoveInstruction;
+import Compiler.IR.MemoryIR.StoreInstruction;
 import Compiler.Type.Type;
 import Compiler.Expression.Expression;
 import Compiler.Type.IntType;
 import Compiler.Table.Table;
+
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/4.
@@ -20,4 +28,21 @@ public class PreAddExpression extends UnaryExpression {
         throw new Error();
     }
 
+    @Override
+    public void emit(List<Instruction> instructions) {
+        expression.emit(instructions);
+        operand = Table.registerTable.addTemp();
+        if (expression.operand instanceof Address) {
+            Address address = (Address)expression.operand;
+            address = new Address(address.base, address.offset);
+            expression.load(instructions);
+            operand = expression.operand;
+            instructions.add(AddInstruction.getInstruction(operand, operand, new Immediate(1)));
+            instructions.add(StoreInstruction.getInstruction(operand, address));
+        } else {
+            expression.load(instructions);
+            operand = expression.operand;
+            instructions.add(AddInstruction.getInstruction(operand, operand, new Immediate(1)));
+        }
+    }
 }

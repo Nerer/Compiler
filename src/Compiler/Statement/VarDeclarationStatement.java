@@ -1,8 +1,12 @@
 package Compiler.Statement;
 
+import Compiler.IR.Instruction;
+import Compiler.IR.MemoryIR.MoveInstruction;
 import Compiler.Symbol.*;
 import Compiler.Expression.Expression;
 import Compiler.Type.*;
+
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/5.
@@ -32,5 +36,14 @@ public class VarDeclarationStatement extends Statement{
     @Override
     public String toString() {
         return "VarDeclarationStatement";
+    }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        if (expression != null) {
+            expression.emit(instructions);
+            expression.load(instructions);
+            instructions.add(MoveInstruction.getInstruction(symbol.register, expression.operand));
+        }
     }
 }

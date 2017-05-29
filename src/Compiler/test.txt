@@ -1,9 +1,5 @@
-void AA() {}
-class B {}
 int main() {
-	int A;
-	B C = new B;
-	AA();
-	A = 10;
-	int B;
+    int s = 123;
+    println(toString(s));
+    return 0;
 }

@@ -2,9 +2,14 @@ package Compiler.Expression.BinaryExpression;
 
 
 import Compiler.Expression.Expression;
+import Compiler.IR.ArithmeticIR.Binary.BitLeftShiftInstruction;
+import Compiler.IR.ArithmeticIR.Binary.LogicalOrInstruction;
+import Compiler.IR.Instruction;
 import Compiler.Type.Type;
 import Compiler.Type.BoolType;
 import Compiler.Table.Table;
+
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/4.
@@ -23,5 +28,15 @@ public class LogicalOrExpression extends BinaryExpression {
     @Override
     public String toString() {
         return "LogicalOrExpression";
+    }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        lhs.emit(instructions);
+        lhs.load(instructions);
+        rhs.emit(instructions);
+        rhs.load(instructions);
+        operand = Table.registerTable.addTemp();
+        instructions.add(LogicalOrInstruction.getInstruction(operand, lhs.operand, rhs.operand));
     }
 }

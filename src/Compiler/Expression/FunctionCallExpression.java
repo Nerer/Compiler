@@ -1,7 +1,13 @@
 package Compiler.Expression;
 
 import Compiler.ErrorMessege.CompilationError;
+import Compiler.IR.FunctionIR.CallInstruction;
+import Compiler.IR.Instruction;
+import Compiler.IR.Operand;
+import Compiler.Table.Table;
 import Compiler.Type.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,4 +49,25 @@ public class FunctionCallExpression extends Expression {
         throw new Error();
     }
 
+    @Override
+    public void emit(List<Instruction> instructions) {
+        if (!peephole(instructions)) {
+            List<Operand> operands = new ArrayList<>();
+            for (Expression parameter : parameters) {
+                parameter.emit(instructions);
+                parameter.load(instructions);
+                operands.add(parameter.operand);
+            }
+            if (type instanceof VoidType) {
+                instructions.add(CallInstruction.getInstruction(null, function, operands));
+            } else {
+                operand = Table.registerTable.addTemp();
+                instructions.add(CallInstruction.getInstruction(operand, function, operands));
+            }
+        }
+    }
+
+    public boolean peephole(List<Instruction> instructions) {
+        return false;
+    }
 }

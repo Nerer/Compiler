@@ -1,7 +1,10 @@
 package Compiler.Expression.BinaryExpression;
 
 import Compiler.Expression.Expression;
+import Compiler.IR.Instruction;
 import Compiler.Type.Type;
+
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/4/4.
@@ -13,4 +16,5 @@ public abstract class BinaryExpression extends Expression {
         this.lhs = lhs;
         this.rhs = rhs;
     }
+
 }

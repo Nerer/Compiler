@@ -2,6 +2,8 @@ package Compiler.Symbol;
 
 import java.util.HashMap;
 import java.util.Stack;
+
+import Compiler.Table.Table;
 import Compiler.Type.Type;
 /**
  * Created by SteinerT on 2017/4/3.
@@ -28,6 +30,24 @@ public class SymbolTable {
         Symbol symbol = new Symbol(type, name);
         tableStack.peek().put(name, symbol);
         conameSymbols.get(name).push(symbol);
+        return symbol;
+    }
+
+    public Symbol addGlobalVariable(String name, Type type) {
+        Symbol symbol = addSymbol(name, type);
+        symbol.register = Table.registerTable.addGlobal(symbol);
+        return symbol;
+    }
+
+    public Symbol addTemporaryVariable(String name, Type type) {
+        Symbol symbol = addSymbol(name, type);
+        symbol.register = Table.registerTable.addTemp(symbol);
+        return symbol;
+    }
+
+    public Symbol addParameterVariable(String name, Type type) {
+        Symbol symbol = addSymbol(name, type);
+        symbol.register = Table.registerTable.addParameter(symbol);
         return symbol;
     }
 

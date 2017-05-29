@@ -1,7 +1,12 @@
 package Compiler.Expression;
 
+import Compiler.IR.*;
+import Compiler.IR.MemoryIR.LoadInstruction;
 import Compiler.Table.Table;
 import Compiler.Type.*;
+
+import java.util.List;
+
 /**
  * Created by SteinerT on 2017/4/4.
  */
@@ -43,6 +48,31 @@ public class MemberExpression extends Expression {
                 }
             }
             throw new Error();
+        }
+    }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        if (expression.type instanceof ClassType) {
+            ClassType classType = (ClassType)expression.type;
+            Member member = classType.getMember(memberName);
+            if (member instanceof MemberVar) {
+                MemberVar memberVar = (MemberVar)member;
+                expression.emit(instructions);
+                expression.load(instructions);
+                VRegister address = (VRegister) expression.operand;
+                Immediate delta = new Immediate(memberVar.offset);
+                operand = new Address(address, delta);
+            }
+        }
+    }
+
+    @Override
+    public void load(List<Instruction> instructions) {
+        if (operand instanceof Address) {
+            Address address = (Address)operand;
+            operand = Table.registerTable.addTemp();
+            instructions.add(LoadInstruction.getInstruction(operand, address));
         }
     }
 }

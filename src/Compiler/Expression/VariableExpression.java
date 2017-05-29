@@ -1,8 +1,12 @@
 package Compiler.Expression;
 import Compiler.ErrorMessege.CompilationError;
+import Compiler.IR.Instruction;
 import Compiler.Symbol.*;
 import Compiler.Type.*;
 import Compiler.Table.Table;
+
+import java.util.List;
+
 /**
  * Created by SteinerT on 2017/4/5.
  */
@@ -28,5 +32,11 @@ public class VariableExpression extends Expression {
             }
         }
     }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        operand = symbol.register;
+    }
+
 
 }

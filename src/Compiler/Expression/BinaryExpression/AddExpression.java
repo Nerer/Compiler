@@ -1,10 +1,16 @@
 package Compiler.Expression.BinaryExpression;
 
 import Compiler.Expression.Expression;
+import Compiler.IR.Address;
+import Compiler.IR.ArithmeticIR.Binary.AddInstruction;
+import Compiler.IR.Instruction;
 import Compiler.Type.IntType;
 import Compiler.Table.Table;
 import Compiler.Type.StringType;
 import Compiler.Type.Type;
+
+import java.util.List;
+
 /**
  * Created by SteinerT on 2017/4/4.
  */
@@ -27,5 +33,15 @@ public class AddExpression extends BinaryExpression {
     @Override
     public String toString() {
         return "AddExpression";
+    }
+
+    @Override
+    public void emit(List<Instruction> instructions) {
+        lhs.emit(instructions);
+        lhs.load(instructions);
+        rhs.emit(instructions);
+        rhs.load(instructions);
+        operand = Table.registerTable.addTemp();
+        instructions.add(AddInstruction.getInstruction(operand, lhs.operand, rhs.operand));
     }
 }

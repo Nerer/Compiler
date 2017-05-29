@@ -87,7 +87,7 @@ public class TreeBuilderListener extends BaseListener {
             FunctionType function = (FunctionType)mapping.get(ctx.parent);
             for (int i = 0; i < function.parameters.size(); i++) {
                 Symbol parameter = function.parameters.get(i);
-                Table.symbolTable.addSymbol(parameter.name, parameter.type);
+                Table.symbolTable.addParameterVariable(parameter.name, parameter.type);
             }
         }
         mapping.put(ctx, blockStatement);
@@ -187,7 +187,12 @@ public class TreeBuilderListener extends BaseListener {
         if (!(ctx.parent instanceof MotherKnowsBestParser.ClassDeclarationContext)) {
             Type type = (Type)mapping.get(ctx.type());
             String name = ctx.IDENTIFIER(0).getText();
-            Symbol symbol = Table.symbolTable.addSymbol(name, type);
+            Symbol symbol;
+            if (Table.scopeTable.getCurrentScope() == Table.program) {
+                symbol = Table.symbolTable.addGlobalVariable(name, type);
+            } else {
+                symbol = Table.symbolTable.addTemporaryVariable(name , type);
+            }
             Expression expression = (Expression)mapping.get(ctx.expression(0));
             mapping.put(ctx, VarDeclarationStatement.getStatement(symbol, expression));
         }

@@ -13,12 +13,13 @@ public class ClassType extends Type implements Scope, ASTNode{
     public HashMap<String, MemberFunction> memberFunctions;
     public HashMap<String, MemberVar> memberVars;
     public FunctionType constructor;
-
+    public int allocateSize;
     public ClassType(String className) {
         this.className = className;
         memberFunctions = new HashMap<>();
         memberVars = new HashMap<>();
         constructor = null;
+        allocateSize = 0;
     }
 
     public void addMember(Type type, String memberName) {

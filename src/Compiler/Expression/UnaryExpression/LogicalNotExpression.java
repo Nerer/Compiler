@@ -1,8 +1,15 @@
 package Compiler.Expression.UnaryExpression;
+import Compiler.IR.ArithmeticIR.Binary.BitXorInstruction;
+import Compiler.IR.ArithmeticIR.Unary.BitNotInstruction;
+import Compiler.IR.Immediate;
+import Compiler.IR.Instruction;
 import Compiler.Type.Type;
 import Compiler.Type.BoolType;
 import Compiler.Table.Table;
 import Compiler.Expression.Expression;
+
+import java.util.List;
+
 /**
  * Created by SteinerT on 2017/4/4.
  */
@@ -17,4 +24,11 @@ public class LogicalNotExpression extends UnaryExpression {
         throw new Error();
     }
 
+    @Override
+    public void emit(List<Instruction> instructions) {
+        expression.emit(instructions);
+        expression.load(instructions);
+        operand = Table.registerTable.addTemp();
+        instructions.add(BitXorInstruction.getInstruction(operand, expression.operand, new Immediate(1)));
+    }
 }
