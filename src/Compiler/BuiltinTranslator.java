@@ -6,7 +6,6 @@ import Compiler.IR.StringRegister;
 import Compiler.IR.VRegister;
 import Compiler.Statement.VarDeclarationStatement;
 import Compiler.Table.Table;
-import sun.tools.jconsole.Tab;
 
 import java.io.PrintStream;
 

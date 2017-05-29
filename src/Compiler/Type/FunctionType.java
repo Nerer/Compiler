@@ -39,7 +39,7 @@ public class FunctionType extends Type implements ASTNode, Scope {
         if (name.equals("this")) {
             throw new Error();
         }
-        Set set = new HashSet<>();
+        Set<Symbol> set = new HashSet<>();
         for (int i = 0; i < parameters.size(); i++) {
             if (set.contains(parameters.get(i))) {
                 throw new Error();

@@ -29,7 +29,7 @@ public class Main {
         for (FunctionType function : Table.program.functions) {
             function.graph = new Graph(function);
         }
-
+/*
         for (FunctionType function : Table.program.functions) {
             Graph graph = function.graph;
             for (int i = 0; i < graph.blocks.size(); i++) {
@@ -39,7 +39,7 @@ public class Main {
                     System.out.println(instruction);
                 }
             }
-        }
+        }*/
     }
     public static void translate() {
         int totRegisters = Table.registerTable.registers.size();

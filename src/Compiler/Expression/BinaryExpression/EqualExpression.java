@@ -9,7 +9,6 @@ import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
 import Compiler.Type.StringType;
 import Compiler.Type.Type;
-import com.sun.tools.corba.se.idl.constExpr.Equal;
 
 import java.util.ArrayList;
 import java.util.List;

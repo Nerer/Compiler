@@ -10,7 +10,6 @@ import Compiler.Type.IntType;
 import Compiler.Table.Table;
 import Compiler.Type.StringType;
 import Compiler.Type.Type;
-import sun.tools.jconsole.Tab;
 
 import java.util.ArrayList;
 import java.util.List;

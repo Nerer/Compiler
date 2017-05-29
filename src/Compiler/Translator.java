@@ -14,15 +14,7 @@ import Compiler.IR.FunctionIR.FunctionInstruction;
 import Compiler.IR.FunctionIR.ReturnInstruction;
 import Compiler.IR.MemoryIR.*;
 import Compiler.Table.Table;
-import Compiler.Type.BoolType;
 import Compiler.Type.FunctionType;
-import com.sun.media.jfxmedia.events.BufferListener;
-import com.sun.org.apache.bcel.internal.generic.RET;
-import com.sun.tools.corba.se.idl.constExpr.LessThan;
-import jdk.nashorn.internal.codegen.CompilerConstants;
-
-import javax.print.attribute.standard.MediaSize;
-import javax.swing.text.MutableAttributeSet;
 import java.io.PrintStream;
 
 /**

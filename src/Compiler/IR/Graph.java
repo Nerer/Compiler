@@ -14,7 +14,6 @@ import Compiler.IR.MemoryIR.*;
 import Compiler.Statement.VarDeclarationStatement;
 import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
-import com.sun.org.apache.bcel.internal.generic.RET;
 
 import java.util.ArrayList;
 import java.util.HashMap;
