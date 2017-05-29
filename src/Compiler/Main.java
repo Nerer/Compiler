@@ -70,7 +70,7 @@ public class Main {
         System.out.printf("\n\n");
         FileOutputStream tmp = new FileOutputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/mytrans.asm");
         PrintStream myout = new PrintStream(tmp);
-        Translator myTranslator = new Translator(myout);
+        Translator myTranslator = new Translator(System.out);
 
         myTranslator.translate();
 
