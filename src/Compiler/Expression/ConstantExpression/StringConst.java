@@ -15,6 +15,10 @@ public class StringConst extends ConstantExpression {
         this.value = str;
     }
 
+    public static StringConst getConst(String value) {
+        return new StringConst(value);
+    }
+
     @Override
     public void emit(List<Instruction> instructions) {
         operand = Table.registerTable.addString(value);

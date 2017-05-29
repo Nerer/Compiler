@@ -1,14 +1,18 @@
 package Compiler.Expression.BinaryExpression;
 
+import Compiler.Expression.ConstantExpression.StringConst;
 import Compiler.Expression.Expression;
+import Compiler.Expression.FunctionCallExpression;
 import Compiler.IR.Address;
 import Compiler.IR.ArithmeticIR.Binary.AddInstruction;
 import Compiler.IR.Instruction;
+import Compiler.Type.FunctionType;
 import Compiler.Type.IntType;
 import Compiler.Table.Table;
 import Compiler.Type.StringType;
 import Compiler.Type.Type;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,8 +28,20 @@ public class AddExpression extends BinaryExpression {
         if (lhs.type instanceof IntType && rhs.type instanceof IntType) {
             return new AddExpression((Type)Table.myInt,false, lhs, rhs);
         }
+
         if (lhs.type instanceof StringType && rhs.type instanceof StringType) {
-            return new AddExpression((Type)Table.myString, false, lhs, rhs);
+            if (lhs instanceof StringConst && rhs instanceof StringConst) {
+                String literal1 = ((StringConst) lhs).value;
+                String literal2 = ((StringConst) rhs).value;
+                return StringConst.getConst(literal1 + literal2);
+            }
+            return FunctionCallExpression.getExpression(
+                    (FunctionType) Table.symbolTable.getSymbol("Mx_builtin_str_concatenate").type,
+                    new ArrayList<Expression>() {{
+                        add(lhs);
+                        add(rhs);
+                    }}
+            );
         }
         throw new Error();
     }

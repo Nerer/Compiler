@@ -20,7 +20,7 @@ public class LogicalAndExpression extends BinaryExpression {
     }
     public static Expression getExpression(Expression lhs, Expression rhs) {
         if (lhs.type instanceof BoolType && rhs.type instanceof BoolType) {
-            return new ModExpression(Table.myBool, false, lhs, rhs);
+            return new LogicalAndExpression(Table.myBool, false, lhs, rhs);
         }
         throw new Error();
     }
