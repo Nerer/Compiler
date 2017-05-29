@@ -1,62 +1,29 @@
-int N = 8;
-int[] row = new int[8];
-int[] col = new int[8];
-int[][] d = new int[2][];
-
-void printBoard() {
-    int i;
-    int j;
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            if (col[i] == j)
-                print(" O");
-            else
-                print(" .");
-        }
-        println("");
-    }
-    println("");
-}
-
-void search(int c) {
-    println(toString(c));
-    println("N =");
-    println(toString(N));
-    if (c == N) {
-        printBoard();
-    }
-    else {
-        int r;
-        for (r = 0; r < N; r++) {
-            println("r=");
-            println(toString(r));
-            println("row[r]=");
-            println(toString(row[r]));
-            println("d[0][r+c]=");
-            println(toString(d[0][r+c]));
-            println("d[1][r+N-1-c]=");
-            println(toString(d[1][r+N-1-c]));
-            if (row[r] == 0 && d[0][r+c] == 0 && d[1][r+N-1-c] == 0) {
-                d[1][r+N-1-c] = 1;
-                d[0][r+c] = 1;
-                row[r] = 1;
-                col[c] = r;
-
-                search(c+1);
-
-                row[r] = 0;
-                d[0][r+c] = 0;
-                d[1][r+N-1-c] = 0;
-            }
-        }
-    }
-}
-
-int main() {
-    int i;
-	for (i = 0; i < 2; i ++)
-	    d[i] = new int[8 + 8 - 1];
-	println("1");
-    search(0);
-    return 0;
-}
+enter
+$t1 = move 30
+$t1 = add $t1 1
+$t1 = mul $t1 8
+$t2 = alloc $t1
+store 30 to [$t2+0]
+$t2 = add $t2 8
+$t1 = move 30
+while_loop
+$t1 = sub $t1 1
+$t3 = move $t1
+$t1 = mul $t1 8
+$t1 = add $t1 $t2
+$t4 = move 30
+$t4 = add $t4 1
+$t4 = mul $t4 8
+$t5 = alloc $t4
+store 30 to [$t5+0]
+$t5 = add $t5 8
+store $t5 to [$t1+0]
+$t6 = neq $t3 0
+br $t6 while_loop while_merge
+while_merge
+$g0 = move $t2
+jump %entry
+entry
+ret 0
+jump %exit
+exit

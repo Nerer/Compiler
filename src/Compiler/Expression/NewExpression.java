@@ -10,9 +10,11 @@ import Compiler.IR.MemoryIR.AllocateInstruction;
 import Compiler.IR.MemoryIR.MoveInstruction;
 import Compiler.IR.MemoryIR.StoreInstruction;
 import Compiler.Statement.ForStatement;
+import Compiler.Table.ClassTable;
 import Compiler.Table.Table;
 import Compiler.Type.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class NewExpression extends Expression{
     }
     public Operand newClass(Type x, List<Instruction> instructions) {
         VRegister dest = Table.registerTable.addTemp();
-        ClassType classType = (ClassType)type;
+        ClassType classType = (ClassType)x;
         instructions.add(AllocateInstruction.getInstruction(dest, new Immediate(classType.allocateSize)));
         classType.memberVars.forEach((name, member) -> {
             Address address = new Address((VRegister)dest, new Immediate(member.offset));
@@ -80,9 +82,14 @@ public class NewExpression extends Expression{
         instructions.add(AddInstruction.getInstruction(dest, dest, Immediate.getImmediate(8)));
 
         int flag = 0;
-        if (type instanceof ClassType && dim + 1 == expressions.size() && expressions.get(dim) != null) {
+        if (((ArrayType)type).baseType instanceof ClassType && dim + 1 == expressions.size() && expressions.get(dim) != null) {
             flag = 1;
         }
+        /*if (type instanceof ArrayType) {
+            System.out.printf("\n\n\n\nFuck\n\n\n\n\n");
+        }*/
+       // System.out.printf("\n\n\n\nDIM = %d FLAG = %d SIZE = %d ISCLASS %d\n\n\n\n\n", dim, flag, expressions.size(), type instanceof ClassType ? 1 : 0);
+
         if (dim + 1 < expressions.size() && expressions.get(dim + 1) != null) {
             flag = 2;
         }
@@ -99,13 +106,14 @@ public class NewExpression extends Expression{
             instructions.add(AddInstruction.getInstruction(size, size, dest));
             address = new Address((VRegister)size);
             if (flag == 1) {
-                instructions.add(StoreInstruction.getInstruction(newClass(type, instructions), address));
+                instructions.add(StoreInstruction.getInstruction(newClass(((ArrayType)type).baseType, instructions), address));
             } else {
                 instructions.add(StoreInstruction.getInstruction(boomshakalaka(instructions, dim + 1), address));
             }
             LabelInstruction merge = new LabelInstruction("while_merge");
             VRegister conditon = Table.registerTable.addTemp();
             instructions.add(NotEqualInstruction.getInstruction(conditon, tsize, Immediate.getImmediate(0)));
+            instructions.add(MoveInstruction.getInstruction(size, tsize));
             instructions.add(BranchInstruction.getInstruction(conditon, loop, merge));
             instructions.add(merge);
         }
