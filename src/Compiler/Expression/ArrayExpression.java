@@ -46,7 +46,7 @@ public class ArrayExpression extends Expression {
         VRegister delta = Table.registerTable.addTemp();
         instructions.add(MulInstruction.getInstruction(delta, index.operand, new Immediate(8)));
         instructions.add(AddInstruction.getInstruction(address, expression.operand, delta));
-        operand = new Address(address, new Immediate(8));
+        operand = new Address(address, new Immediate(0));
     }
 
     @Override

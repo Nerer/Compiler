@@ -20,5 +20,8 @@ public class Address extends Operand {
     }
 
 
-
+    @Override
+    public String toString() {
+        return this.base + "+" + this.offset;
+    }
 }

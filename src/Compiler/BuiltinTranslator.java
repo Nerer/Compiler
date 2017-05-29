@@ -161,7 +161,11 @@ public class BuiltinTranslator {
 
     static public String getNASMprint(String Format) {
         StringBuilder str = new StringBuilder();
-        str.append(Format + ":\n");
+        if (Format.equals("print")) {
+            str.append("Mx_builtin_print:\n");
+        } else {
+            str.append(Format + ":\n");
+        }
         rsp_offset = 1;
         str.append(BuiltinTranslator.getInstruction("mov", "rsi", "rdi"));
         str.append(BuiltinTranslator.getInstruction("mov", "rdi", "__" + Format + "Format"));

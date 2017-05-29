@@ -26,6 +26,6 @@ public class StoreInstruction extends MemoryInstruction {
 
     @Override
     public String toString() {
-        return "store";
+        return "store " + source + " to" + " [" + address +"]";
     }
 }

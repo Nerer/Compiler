@@ -43,7 +43,7 @@ public class Translator {
     void load(Graph graph, String reg, Operand operand) {
         if (operand instanceof VRegister) {
             if (operand instanceof GlobalRegister) {
-                output.printf("\tmov %s %s\n", reg, String.format("[rel %s]", ((GlobalRegister)operand).symbol.name));
+                output.printf("\tmov %s, %s\n", reg, String.format("[rel %s]", ((GlobalRegister)operand).symbol.name));
             } else {
                 if (operand instanceof StringRegister) {
                     output.printf("\tmov %s, %s\n", reg, ((StringRegister)operand).message());
@@ -149,23 +149,33 @@ public class Translator {
                             }
                             if (instr instanceof EqualInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsete %s\n", NASMRegister.r10);
+                                output.printf("\tsete %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+
                             }
                             if (instr instanceof GeInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsetge %s\n", NASMRegister.r10);
+                                output.printf("\tsetge %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+
                             }
                             if (instr instanceof GreaterInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsetg %s\n", NASMRegister.r10);
+                                output.printf("\tsetg %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+
                             }
                             if (instr instanceof LeInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsetle %s\n", NASMRegister.r10);
+                                output.printf("\tsetle %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+
                             }
                             if (instr instanceof LessInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsetl %s\n", NASMRegister.r10);
+                                output.printf("\tsetl %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+
                             }
                             if (instr instanceof LogicalAndInstruction) {
                                 output.printf("\tand %s, %s\n", NASMRegister.r10, NASMRegister.r11);
@@ -188,7 +198,8 @@ public class Translator {
                             }
                             if (instr instanceof NotEqualInstruction) {
                                 output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tsetne %s\n", NASMRegister.r10);
+                                output.printf("\tsetne %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
                         }
@@ -233,7 +244,7 @@ public class Translator {
                                 condition = "[" + NASMRegister.r11 + "+" + ((Address)branch.condition).offset + "]";
                             }*/
                             load(graph, NASMRegister.r10, branch.condition);
-                            output.printf("\tcmp %s 0\n", NASMRegister.r10);
+                            output.printf("\tcmp %s, 0\n", NASMRegister.r10);
                             output.printf("\tjz %s\n", getBlockName(branch.falseTo.block));
                             if (i + 1 == graph.blocks.size() || graph.blocks.get(i + 1) != branch.trueTo.block) {
                                 output.printf("\tjmp %s\n", getBlockName(branch.trueTo.block));
@@ -298,7 +309,7 @@ public class Translator {
                                 output.printf("\tsub rsp, 8\n");
                                 nowRsp += 8;
                             }
-                            output.printf("\tcall melloc\n");
+                            output.printf("\tcall malloc\n");
                             output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
                         }
                         if (instruction instanceof LoadInstruction) {
@@ -317,7 +328,7 @@ public class Translator {
                             load(graph, NASMRegister.r10, store.source);
                             load(graph, NASMRegister.r11, store.address.base);
                             String address = "[" + NASMRegister.r11 + "+" + (store.address.offset).toString() + "]";
-                            output.printf("\tmov %s, %s\n", address, NASMRegister.r11);
+                            output.printf("\tmov %s, %s\n", address, NASMRegister.r10);
                         }
                     }
                 }

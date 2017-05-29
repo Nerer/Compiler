@@ -21,5 +21,6 @@ public class NASMRegister {
     public static String r14 = "r14";
     public static String r15 = "r15";
     public static String cl = "cl";
+    public static String al = "al";
 
 }
