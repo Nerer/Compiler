@@ -72,7 +72,7 @@ public class Main {
         PrintStream myout = new PrintStream(tmp);
         Translator myTranslator = new Translator(System.out);
 
-       // myTranslator.translate();
+        //myTranslator.translate();
 
     }
 }

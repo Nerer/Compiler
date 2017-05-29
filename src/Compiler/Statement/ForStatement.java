@@ -1,5 +1,6 @@
 package Compiler.Statement;
 
+import Compiler.Expression.ConstantExpression.BoolConst;
 import Compiler.Expression.Expression;
 import Compiler.IR.ControlFlowIR.BranchInstruction;
 import Compiler.IR.ControlFlowIR.JumpInstruction;
@@ -25,6 +26,10 @@ public class ForStatement extends LoopStatement {
     }
 
     public void addCondition(Expression expression) {
+        if (expression == null) {
+            this.condition = BoolConst.getConst(true);
+            return;
+        }
         if (expression.type instanceof BoolType) {
             this.condition = expression;
         } else {

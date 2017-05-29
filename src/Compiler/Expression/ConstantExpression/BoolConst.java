@@ -15,7 +15,9 @@ public class BoolConst extends ConstantExpression {
         super(Table.myBool);
         this.value = flag;
     }
-
+    public static BoolConst getConst(boolean flag) {
+        return new BoolConst(flag);
+    }
     @Override
     public void emit(List<Instruction> instructions) {
         operand = new Immediate(value ? 1 : 0);
