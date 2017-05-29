@@ -4,7 +4,12 @@ package Compiler.Expression.BinaryExpression;
 import Compiler.Expression.Expression;
 import Compiler.IR.ArithmeticIR.Binary.BitLeftShiftInstruction;
 import Compiler.IR.ArithmeticIR.Binary.LogicalOrInstruction;
+import Compiler.IR.ControlFlowIR.BranchInstruction;
+import Compiler.IR.ControlFlowIR.JumpInstruction;
+import Compiler.IR.ControlFlowIR.LabelInstruction;
+import Compiler.IR.Immediate;
 import Compiler.IR.Instruction;
+import Compiler.IR.MemoryIR.MoveInstruction;
 import Compiler.Type.Type;
 import Compiler.Type.BoolType;
 import Compiler.Table.Table;
@@ -32,11 +37,35 @@ public class LogicalOrExpression extends BinaryExpression {
 
     @Override
     public void emit(List<Instruction> instructions) {
+        LabelInstruction trueLabel = LabelInstruction.getInstruction("logical_true");
+        LabelInstruction falseLabel = LabelInstruction.getInstruction("logical_false");
+        LabelInstruction mergeLabel = LabelInstruction.getInstruction("logical_merge");
+		/*
+			%...:
+				****left****
+				branch $left, %logical_true, %logical_false
+			%logical_false:
+				****right****
+				$operand = move $right
+				goto %logical_merge
+			%logical_true:
+				$operand = move 1
+				goto %logical_merge
+			%logical_merge:
+				...
+		 */
+        operand = Table.registerTable.addTemp();
         lhs.emit(instructions);
         lhs.load(instructions);
+        instructions.add(BranchInstruction.getInstruction(lhs.operand, trueLabel, falseLabel));
+        instructions.add(falseLabel);
         rhs.emit(instructions);
         rhs.load(instructions);
-        operand = Table.registerTable.addTemp();
-        instructions.add(LogicalOrInstruction.getInstruction(operand, lhs.operand, rhs.operand));
+        operand = rhs.operand;
+        instructions.add(JumpInstruction.getInstruction(mergeLabel));
+        instructions.add(trueLabel);
+        instructions.add(MoveInstruction.getInstruction(operand, new Immediate(1)));
+        instructions.add(JumpInstruction.getInstruction(mergeLabel));
+        instructions.add(mergeLabel);
     }
 }
