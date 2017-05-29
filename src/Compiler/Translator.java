@@ -20,6 +20,7 @@ import java.io.PrintStream;
 /**
  * Created by SteinerT on 2017/5/27.
  */
+
 public class Translator {
     public PrintStream output;
 
@@ -58,7 +59,6 @@ public class Translator {
             output.printf("\tmov %s, %s\n", reg, graph.getMemory(((Address)operand).base));
             output.printf("\tmov %s, qword[%s+%s]\n", reg, reg, ((Address)operand).offset);
         }
-
 
     }
 
@@ -280,6 +280,7 @@ public class Translator {
                             if (call.target != null) {
                                 output.printf("\tmov %s, %s\n", graph.getMemory(call.target), NASMRegister.rax);
                             }
+                            output.printf("\txor %s, %s\n", NASMRegister.rax, NASMRegister.rax);
                         }
 
                         if (instruction instanceof ReturnInstruction) {
@@ -292,10 +293,17 @@ public class Translator {
 
                     if (instruction instanceof MemoryInstruction) {
                         if (instruction instanceof AllocateInstruction) {
-
+                            load(graph, NASMRegister.rdi, ((AllocateInstruction)instruction).size);
+                            if ((nowRsp + 8) % 16 != 0) {
+                                output.printf("\tsub rsp, 8\n");
+                                nowRsp += 8;
+                            }
+                            output.printf("\tcall melloc\n");
+                            output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
                         }
                         if (instruction instanceof LoadInstruction) {
                             LoadInstruction ld = (LoadInstruction)instruction;
+
                             load(graph, NASMRegister.r10, ld.address);
                             output.printf("\tmov %s, %s\n", graph.getMemory(ld.target), NASMRegister.r10);
                         }

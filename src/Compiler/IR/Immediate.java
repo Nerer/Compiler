@@ -9,6 +9,9 @@ public class Immediate extends Operand {
         this.value = value;
     }
 
+    public static Immediate getImmediate(int value) {
+        return new Immediate(value);
+    }
     @Override
     public String toString() {
         return String.valueOf(value);

@@ -87,7 +87,7 @@ public class TreeBuilderListener extends BaseListener {
             FunctionType function = (FunctionType)mapping.get(ctx.parent);
             for (int i = 0; i < function.parameters.size(); i++) {
                 Symbol parameter = function.parameters.get(i);
-                Table.symbolTable.addParameterVariable(parameter.name, parameter.type);
+                function.parameters.set(i, Table.symbolTable.addParameterVariable(parameter.name, parameter.type));
             }
         }
         mapping.put(ctx, blockStatement);
