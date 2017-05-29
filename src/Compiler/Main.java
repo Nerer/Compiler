@@ -30,7 +30,7 @@ public class Main {
             function.graph = new Graph(function);
         }
         //return;
-
+/*
         for (FunctionType function : Table.program.functions) {
             Graph graph = function.graph;
             for (int i = 0; i < graph.blocks.size(); i++) {
@@ -41,7 +41,7 @@ public class Main {
                 }
             }
         }
-
+*/
     }
     public static void translate() {
         int totRegisters = Table.registerTable.registers.size();
@@ -73,7 +73,7 @@ public class Main {
         FileOutputStream tmp = new FileOutputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/mytrans.asm");
         PrintStream myout = new PrintStream(tmp);
         Translator myTranslator = new Translator(System.out);
-        myTranslator = new Translator(myout);
+       // myTranslator = new Translator(myout);
         myTranslator.translate();
 
     }
