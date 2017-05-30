@@ -262,7 +262,7 @@ public class SuperTranslator {
 
 
         nowRsp += graph.frame.size;
-        System.out.println(nowRsp);
+        //System.out.println(nowRsp);
 
         if (!graph.function.name.equals("main")) {
             for (int kk = 0; kk < (int)calleeRegs.size(); kk++) {
