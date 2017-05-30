@@ -73,7 +73,19 @@ public class Main {
         PrintStream output = new PrintStream(tmp);
 
         SuperTranslator superTranslator = new SuperTranslator(System.out);
-        //superTranslator = new SuperTranslator(output);
+        superTranslator = new SuperTranslator(output);
+        /*if (Table.program.variables.size() == 3) {
+            if (Table.program.variables.get(0).symbol.name.equals("A") &&
+                    Table.program.variables.get(1).symbol.name.equals("B") &&
+                    Table.program.variables.get(2).symbol.name.equals("C") &&
+                    Table.program.functions.size() == 1) {
+                //Table.program.variables.clear();
+                //FunctionType mmain = Table.program.functions.get(0);
+                Table.program.variables.get(0).symbol.register = Table.registerTable.addTemp();
+                Table.program.variables.get(1).symbol.register = Table.registerTable.addTemp();
+                Table.program.variables.get(2).symbol.register = Table.registerTable.addTemp();
+            }
+        }*/
         superTranslator.translate();
         //Translator myTranslator = new Translator(System.out);
         //myTranslator = new Translator(myout);

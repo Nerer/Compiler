@@ -2,6 +2,7 @@ package Compiler.AST;
 
 import Compiler.Scope.Scope;
 import Compiler.Statement.VarDeclarationStatement;
+import Compiler.Symbol.Symbol;
 import Compiler.Type.*;
 
 import java.util.ArrayList;
@@ -12,12 +13,14 @@ import java.util.ArrayList;
 public class Program implements ASTNode, Scope {
     public ArrayList<FunctionType> functions;
     public ArrayList<VarDeclarationStatement> variables;
+    public ArrayList<Symbol> rebuildVariables;
     public ArrayList<ClassType> classTypes;
 
     public Program() {
         classTypes = new ArrayList<>();
         variables = new ArrayList<>();
         functions = new ArrayList<>();
+        rebuildVariables = new ArrayList<>();
     }
 
     public static Program getProgram() {

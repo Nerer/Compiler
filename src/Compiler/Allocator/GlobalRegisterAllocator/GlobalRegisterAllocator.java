@@ -1,6 +1,7 @@
 package Compiler.Allocator.GlobalRegisterAllocator;
 
 import Compiler.Allocator.Allocator;
+import Compiler.IR.ArithmeticIR.Binary.BinaryInstruction;
 import Compiler.IR.Block;
 import Compiler.IR.Instruction;
 import Compiler.IR.MemoryIR.MoveInstruction;
@@ -34,13 +35,30 @@ public class GlobalRegisterAllocator extends Allocator{
             }};
             for (int i = block.instructions.size() - 1; i >= 0; --i) {
                 Instruction instruction = block.instructions.get(i);
-                for (VRegister register : instruction.getDefinedRegisters()) {
-                    for (VRegister living : live) {
-                        graph.forbid(register, living);
+                if (instruction instanceof BinaryInstruction) {
+                    for (VRegister out : live) {
+                        graph.forbid(((BinaryInstruction) instruction).target, out);
                     }
+                    live.remove(((BinaryInstruction) instruction).target);
+                    if (((BinaryInstruction) instruction).source2 instanceof VRegister){
+                        live.add((VRegister) ((BinaryInstruction) instruction).source2);
+                    }
+                    for (VRegister out : live) {
+                        graph.forbid(((BinaryInstruction) instruction).target, out);
+                    }
+                    live.remove(((BinaryInstruction) instruction).target);
+                    if (((BinaryInstruction) instruction).source1 instanceof VRegister){
+                        live.add((VRegister) ((BinaryInstruction) instruction).source1);
+                    }
+                } else {
+                    for (VRegister register : instruction.getDefinedRegisters()) {
+                        for (VRegister living : live) {
+                            graph.forbid(register, living);
+                        }
+                    }
+                    instruction.getDefinedRegisters().forEach(live::remove);
+                    instruction.getUsedRegisters().forEach(live::add);
                 }
-                instruction.getDefinedRegisters().forEach(live::remove);
-                instruction.getUsedRegisters().forEach(live::add);
             }
         }
         for (Block block : function.graph.blocks) {

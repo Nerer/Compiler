@@ -18,6 +18,7 @@ import Compiler.IR.FunctionIR.ReturnInstruction;
 import Compiler.IR.MemoryIR.*;
 import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
+import sun.tools.jconsole.Tab;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -382,12 +383,13 @@ public class SuperTranslator {
                             }
                             store(i.target, c);
                         } else {
-                            PRegister a = superloadToRead(i.source1, NASMRegister.tmp1);
+                            PRegister a = loadToRead(i.source1, NASMRegister.tmp1);
                             PRegister b = loadToRead(i.source2, NASMRegister.tmp2);
                             PRegister c = loadToWrite(i.target, NASMRegister.tmp2);
                             if (i instanceof AddInstruction) {
-                                output.printf("\tadd %s, %s\n", a, b);
-                                output.printf("\tmov %s, %s\n", c, a);
+                                //output.printf("\tadd %s, %s\n", a, b);
+                                //output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tlea %s, [%s + %s]\n", c, a, b);
                             }
                             if (i instanceof BitAndInstruction) {
                                 output.printf("\tand %s, %s\n", a, b);
