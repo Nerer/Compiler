@@ -95,6 +95,7 @@ public class Translator {
             for (int i = 0; i < graph.blocks.size(); i++) {
                 Block block = graph.blocks.get(i);
                 output.printf("\n%s:\n", getBlockName(block));
+                Operand last = null;
                 for (Instruction instruction : block.instructions) {
                     if (instruction instanceof ArithmeticInstruction) {
                         if (instruction instanceof BinaryInstruction) {
@@ -109,7 +110,9 @@ public class Translator {
                                 output.printf("\tmov %s %s\n", NASMRegister.r10, graph.getMemory(((Address)instr.source1).base));
                                 output.printf("\tmov %s [%s+%s]\n", NASMRegister.r10, NASMRegister.r10, ((Address)instr.source1).offset);
                             }*/
-                            load(graph, NASMRegister.r10, instr.source1);
+                            if (instr.source1 != last) {
+                                load(graph, NASMRegister.r10, instr.source1);
+                            }
                             /*String source2;
                             source2 = "";
                             if (instr.source2 instanceof VRegister) {
@@ -131,7 +134,7 @@ public class Translator {
                             }
                             if (instr instanceof BitLeftShiftInstruction) {
                                 output.printf("\tmov %s, %s\n",  NASMRegister.rcx, NASMRegister.r11);
-                                output.printf("\tsal %s, %s\n", NASMRegister.r10, NASMRegister.cl);
+                                output.printf("\tshl %s, %s\n", NASMRegister.r10, NASMRegister.cl);
                             }
                             if (instr instanceof BitOrInstruction) {
                                 output.printf("\tor %s, %s\n", NASMRegister.r10, NASMRegister.r11);
@@ -205,6 +208,7 @@ public class Translator {
                                 output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
+                            last = instr.target;
                         }
                         if (instruction instanceof UnaryInstruction) {
                             UnaryInstruction instr = (UnaryInstruction)instruction;
@@ -220,7 +224,9 @@ public class Translator {
                                 source = "[" + NASMRegister.r11 + "+" + ((Address)instr.source).offset + "]";
                             }
                             */
-                            load(graph, NASMRegister.r10, instr.source);
+                            if (last != instr.source) {
+                                load(graph, NASMRegister.r10, instr.source);
+                            }
 
                             if (instr instanceof BitNotInstruction) {
                                 output.printf("\tnot %s\n", NASMRegister.r10);
@@ -229,6 +235,7 @@ public class Translator {
                                 output.printf("\tneg %s\n", NASMRegister.r10);
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
+                            last = instr.target;
                         }
                     }
                     if (instruction instanceof ControlFlowInstruction) {
@@ -246,7 +253,9 @@ public class Translator {
                                 output.printf("\tmov %s %s\n", NASMRegister.r11, graph.getMemory(((Address)branch.condition).base));
                                 condition = "[" + NASMRegister.r11 + "+" + ((Address)branch.condition).offset + "]";
                             }*/
-                            load(graph, NASMRegister.r10, branch.condition);
+                            if (branch.condition != last) {
+                                load(graph, NASMRegister.r10, branch.condition);
+                            }
                             output.printf("\tcmp %s, 0\n", NASMRegister.r10);
                             output.printf("\tjz %s\n", getBlockName(branch.falseTo.block));
                             if (i + 1 == graph.blocks.size() || graph.blocks.get(i + 1) != branch.trueTo.block) {
@@ -259,6 +268,7 @@ public class Translator {
                                 output.printf("\tjmp %s\n", getBlockName(jump.to.block));
                             }
                         }
+                        last = null;
                     }
 
                     if (instruction instanceof FunctionInstruction) {
@@ -281,7 +291,9 @@ public class Translator {
                                 }
                             } else {
                                 for (int p = 0; p < callFunction.parameters.size(); p++) {
-                                    load(graph, NASMRegister.r10, call.parameters.get(p));
+                                    if (last != call.parameters.get(p)) {
+                                        load(graph, NASMRegister.r10, call.parameters.get(p));
+                                    }
                                     int offset = callFunction.graph.getOffset(callFunction.parameters.get(p).register);
                                     int fuck = callFunction.graph.getRegisters() * 8 + 24 + 8;
                                     if ((nowRsp + 8) % 16 != 0) {
@@ -289,6 +301,7 @@ public class Translator {
                                     } else {
                                         output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset), NASMRegister.r10);
                                     }
+                                    last = call.parameters.get(p);
                                 }
                             }
                             if ((nowRsp + 8) % 16 != 0) {
@@ -312,6 +325,7 @@ public class Translator {
                             load(graph, NASMRegister.rax, ret.source);
                             output.printf("\tjmp %s\n", getBlockName(graph.exit));
                         }
+                        last = null;
                     }
 
                     if (instruction instanceof MemoryInstruction) {
@@ -327,17 +341,20 @@ public class Translator {
                                 output.printf("\tcall malloc\n");
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
+                            last = ((AllocateInstruction)instruction).target;
                         }
                         if (instruction instanceof LoadInstruction) {
                             LoadInstruction ld = (LoadInstruction)instruction;
 
                             load(graph, NASMRegister.r10, ld.address);
                             output.printf("\tmov %s, %s\n", graph.getMemory(ld.target), NASMRegister.r10);
+                            last = ld.target;
                         }
                         if (instruction instanceof MoveInstruction) {
                             MoveInstruction mov = (MoveInstruction)instruction;
                             load(graph, NASMRegister.r10, mov.source);
                             output.printf("\tmov %s, %s\n", graph.getMemory(mov.target), NASMRegister.r10);
+                            last = mov.target;
                         }
                         if (instruction instanceof StoreInstruction) {
                             StoreInstruction store = (StoreInstruction)instruction;
@@ -345,6 +362,7 @@ public class Translator {
                             load(graph, NASMRegister.r11, store.address.base);
                             String address = "[" + NASMRegister.r11 + "+" + (store.address.offset).toString() + "]";
                             output.printf("\tmov %s, %s\n", address, NASMRegister.r10);
+                            last = store.address;
                         }
                     }
                 }

@@ -19,7 +19,7 @@ public class BitOrExpression extends BinaryExpression {
     }
     public static Expression getExpression(Expression lhs, Expression rhs) {
         if (lhs.type instanceof IntType && rhs.type instanceof IntType) {
-            return new BitAndExpression((Type)Table.myInt, false, lhs, rhs);
+            return new BitOrExpression((Type)Table.myInt, false, lhs, rhs);
         }
         throw new Error();
     }
