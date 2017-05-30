@@ -10,6 +10,7 @@ import Compiler.IR.MemoryIR.StoreInstruction;
 import Compiler.Table.Table;
 import Compiler.Type.Type;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**

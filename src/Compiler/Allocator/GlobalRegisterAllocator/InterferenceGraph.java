@@ -18,8 +18,6 @@ public class InterferenceGraph {
         add(NASMRegister.rdi);
         add(NASMRegister.r8);
         add(NASMRegister.r9);
-        add(NASMRegister.r10);
-        add(NASMRegister.r11);
         add(NASMRegister.r12);
         add(NASMRegister.r13);
         add(NASMRegister.r14);

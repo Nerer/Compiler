@@ -1,6 +1,8 @@
 package Compiler;
 
+import Compiler.Allocator.Allocator;
 import Compiler.Allocator.PRegister;
+import Compiler.Expression.FunctionCallExpression;
 import Compiler.IR.*;
 import Compiler.IR.ArithmeticIR.ArithmeticInstruction;
 import Compiler.IR.ArithmeticIR.Binary.*;
@@ -18,15 +20,25 @@ import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
 
 import java.io.PrintStream;
+import java.util.*;
 
 /**
  * Created by SteinerT on 2017/5/30.
  */
 public class SuperTranslator {
     public PrintStream output;
-
+    Graph graph;
+    Allocator allocator;
+    Set<PRegister> callee;
     public SuperTranslator(PrintStream output) {
         this.output = output;
+        callee = new HashSet<>();
+        callee.add(NASMRegister.rbx);
+        callee.add(NASMRegister.rbp);
+        callee.add(NASMRegister.r12);
+        callee.add(NASMRegister.r13);
+        callee.add(NASMRegister.r14);
+        callee.add(NASMRegister.r15);
     }
 
     String getFunctionName(FunctionType function) {
@@ -45,26 +57,161 @@ public class SuperTranslator {
         return "GLOBAL_V_" + name;
     }
 
-    void load(Graph graph, PRegister reg, Operand operand) {
-        if (operand instanceof VRegister) {
-            if (operand instanceof GlobalRegister) {
-                output.printf("\tmov %s, %s\n", reg, String.format("[rel %s]", getGlobalName(((GlobalRegister)operand).symbol.name)));
+    public PRegister superloadToRead(Operand from, PRegister to) {
+        if (from instanceof VRegister) {
+            if (from instanceof VarRegister) {
+                if (from instanceof GlobalRegister) {
+                    output.printf("\tmov %s, qword[rel %s]\n", to, getGlobalName(((GlobalRegister)from).symbol.name));
+                } else if (from instanceof ParameterRegister){
+                    output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                } else if (from instanceof TempRegister) {
+                    PRegister register = allocator.mapping.get(from);
+                    if (register != null) {
+                        output.printf("\tmov %s, %s\n", to, register);
+                    } else {
+                        output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                    }
+                }
             } else {
-                if (operand instanceof StringRegister) {
-                    output.printf("\tmov %s, %s\n", reg, ((StringRegister)operand).message());
-                } else {
-                    output.printf("\tmov %s, %s\n", reg, graph.getMemory((VRegister) operand));
+                if (from instanceof StringRegister) {
+                    output.printf("\tmov %s, %s\n", to, ((StringRegister) from).message());
                 }
             }
-        }
-        if (operand instanceof Immediate) {
-            output.printf("\tmov %s, %s\n", reg, ((Immediate)operand).toString());
-        }
-        if (operand instanceof Address) {
-            output.printf("\tmov %s, %s\n", reg, graph.getMemory(((Address)operand).base));
-            output.printf("\tmov %s, qword[%s+%s]\n", reg, reg, ((Address)operand).offset);
+        } else if (from instanceof Address) {
+            throw new InternalError();
+        } else if (from instanceof Immediate) {
+            output.printf("\tmov %s, %s\n", to, from);
+        } else {
+            throw new InternalError();
         }
 
+        return to;
+    }
+
+    public PRegister loadToRead(Operand from, PRegister to) {
+        if (from instanceof VRegister) {
+            if (from instanceof VarRegister) {
+                if (from instanceof GlobalRegister) {
+                    output.printf("\tmov %s, qword[rel %s]\n", to, getGlobalName(((GlobalRegister)from).symbol.name));
+                } else if (from instanceof ParameterRegister){
+                    /*if (graph != null) {
+                        System.out.println("ffffff");
+                    }*/
+                    output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                } else if (from instanceof TempRegister) {
+                    PRegister register = allocator.mapping.get(from);
+                    if (register != null) {
+                        return register;
+                    } else {
+                        output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                    }
+                }
+            } else {
+                if (from instanceof StringRegister) {
+                    output.printf("\tmov %s, %s\n", to, ((StringRegister) from).message());
+                }
+            }
+        } else if (from instanceof Address) {
+            throw new InternalError();
+        } else if (from instanceof Immediate) {
+            output.printf("\tmov %s, %s\n", to, from);
+        } else {
+            throw new InternalError();
+        }
+
+        return to;
+    }
+
+    public PRegister loadToWrite(VRegister from, PRegister to) {
+        if (from instanceof TempRegister) {
+            PRegister register = allocator.mapping.get(from);
+            if (register != null) {
+                return register;
+            }
+        }
+        return to;
+    }
+
+    public void store(VRegister from, PRegister to) {
+        if (from instanceof VarRegister) {
+            if (from instanceof GlobalRegister) {
+                output.printf("\tmov qword[rel %s], %s\n", getGlobalName(((GlobalRegister)from).symbol.name), to);
+            } else if (from instanceof ParameterRegister) {
+                output.printf("\tmov qword[rsp + %d], %s\n", graph.frame.getOffset(from), to);
+            } else if (from instanceof TempRegister) {
+                PRegister register = allocator.mapping.get(from);
+                if (register == null) {
+                    output.printf("\tmov qword[rsp + %d], %s\n", graph.frame.getOffset(from), to);
+                }
+            } else {
+                throw new InternalError();
+            }
+        } else if (from instanceof StringRegister) {
+                throw new InternalError();
+        } else {
+            throw new InternalError();
+        }
+    }
+
+    public void move(Operand from, PRegister to) {
+        if (from instanceof VRegister) {
+            if (from instanceof VarRegister) {
+                if (from instanceof GlobalRegister) {
+                    output.printf("\tmov %s, qword[rel %s]\n", to, getGlobalName(((GlobalRegister)from).symbol.name));
+                } else if (from instanceof ParameterRegister) {
+                    output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                } else if (from instanceof TempRegister) {
+                    PRegister register = allocator.mapping.get(from);
+                    if (register != null) {
+                        if (register != to) {
+                            output.printf("\tmov %s, %s\n", to, register);
+                        }
+                    } else {
+                        output.printf("\tmov %s, qword[rsp + %d]\n", to, graph.frame.getOffset(from));
+                    }
+                } else {
+                    throw new InternalError();
+                }
+            } else {
+                if (from instanceof StringRegister) {
+                    output.printf("\tmov %s, %s\n", to, ((StringRegister) from).message());
+                } else {
+                    throw new InternalError();
+                }
+            }
+        } else {
+            if (from instanceof Address) {
+                throw new InternalError();
+            } else if (from instanceof Immediate) {
+                output.printf("\tmov %s, %s\n", to, from);
+            } else {
+                throw new InternalError();
+            }
+        }
+    }
+    private void move(PRegister from, VRegister to) {
+        if (to instanceof VarRegister) {
+            if (to instanceof GlobalRegister) {
+                output.printf("\tmov qword[rel %s], %s\n", getGlobalName(((GlobalRegister)to).symbol.name), from);
+            } else if (to instanceof ParameterRegister) {
+                output.printf("\tmov qword[rsp+%d], %s\n", graph.frame.getOffset(to), from);
+            } else if (to instanceof TempRegister) {
+                PRegister register = allocator.mapping.get(to);
+                if (register != null) {
+                    if (register != from) {
+                        output.printf("\tmov %s, %s\n", register, from);
+                    }
+                } else {
+                    output.printf("\tmov qword[%s+%d], %s\n", NASMRegister.rsp, graph.frame.getOffset(to), from);
+                }
+            } else {
+                throw new InternalError();
+            }
+        } else if (to instanceof StringRegister) {
+            throw new InternalError();
+        } else {
+            throw new InternalError();
+        }
     }
 
     public void translate() {
@@ -85,227 +232,311 @@ public class SuperTranslator {
         output.printf("\n%s\n", BuiltinTranslator.getBuiltinFunction());
 
         for (FunctionType function : Table.program.functions) {
-            int nowRsp = 0;
-            Graph graph = function.graph;
-            output.printf("%s:\n", getFunctionName(function));
-            output.printf("\tpush rbp\n");
-            nowRsp += 8;
-            output.printf("\tmov rbp, rsp\n");
-            output.printf("\tsub rsp, %d\n", graph.getRegisters() * 8 + 16);
-            nowRsp += graph.getRegisters() * 8 + 16;
-            Boolean hasReturn = false;
-            for (int i = 0; i < graph.blocks.size(); i++) {
-                Block block = graph.blocks.get(i);
-                output.printf("\n%s:\n", getBlockName(block));
-                Operand last = null;
-                for (Instruction instruction : block.instructions) {
-                    if (instruction instanceof ArithmeticInstruction) {
-                        if (instruction instanceof BinaryInstruction) {
-                            BinaryInstruction instr = (BinaryInstruction)instruction;
-                            /*if (instr.source1 instanceof VRegister) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r10, graph.getMemory((VRegister) instr.source1));
+            this.allocator = function.allocator;
+            translate(function.graph);
+        }
+
+        output.printf("%s\n", BuiltinTranslator.getDataSection());
+        output.printf("%s\n", BuiltinTranslator.getBssSection());
+    }
+
+    public void translate(Graph graph) {
+        int nowRsp = 0;
+        this.graph = graph;
+        Set<PRegister> regs = allocator.getUsedPhysicalRegisters();
+        List<PRegister> callerRegs = new ArrayList<>();
+        List<PRegister> calleeRegs = new ArrayList<>();
+        for (PRegister reg : regs) {
+            if (!callee.contains(reg)) {
+                callerRegs.add(reg);
+            } else {
+                calleeRegs.add(reg);
+            }
+        }
+
+        output.printf("%s:\n", getFunctionName(graph.function));
+        output.printf("\tpush rbp\n");
+        nowRsp += 8;
+        output.printf("\tmov rbp, rsp\n");
+        output.printf("\tsub rsp, %d\n", graph.frame.size);
+
+
+        nowRsp += graph.frame.size;
+        System.out.println(nowRsp);
+
+        if (!graph.function.name.equals("main")) {
+            for (int kk = 0; kk < (int)calleeRegs.size(); kk++) {
+                output.printf("\tmov qword[rsp + %d], %s\n", calleeRegs.get(kk).identity * 8, calleeRegs.get(kk));
+            }
+        }
+
+        graph.refresh();
+        Instruction reserved = null;
+        for (int k = 0; k < graph.blocks.size(); k++) {
+            Block block = graph.blocks.get(k);
+            output.printf("\n%s:\n", getBlockName(block));
+            for (int l = 0; l < block.instructions.size(); l++) {
+                Instruction instruction = block.instructions.get(l);
+                //System.out.println(instruction);
+                if (instruction instanceof ArithmeticInstruction) {
+                    if (instruction instanceof BinaryInstruction) {
+                        BinaryInstruction i = (BinaryInstruction)instruction;
+                        if (l + 1 < block.instructions.size() && block.instructions.get(l + 1) instanceof BranchInstruction) {
+                            BranchInstruction j = (BranchInstruction)block.instructions.get(l + 1);
+                            if (j.condition == i.target && !block.liveliness.liveOut.contains(i.target)) {
+                                reserved = instruction;
+                                continue;
                             }
-                            if (instr.source1 instanceof Immediate) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r10, ((Immediate)instr.source1).toString());
+                        }
+                        if (i.source2 instanceof Immediate) {
+                            PRegister a = superloadToRead(i.source1, NASMRegister.tmp1);
+                            PRegister c = loadToRead(i.target, NASMRegister.tmp2);
+                            if (i instanceof AddInstruction) {
+                                output.printf("\tadd %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr.source1 instanceof Address) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r10, graph.getMemory(((Address)instr.source1).base));
-                                output.printf("\tmov %s [%s+%s]\n", NASMRegister.r10, NASMRegister.r10, ((Address)instr.source1).offset);
-                            }*/
-                            if (instr.source1 != last) {
-                                load(graph, NASMRegister.r10, instr.source1);
+                            if (i instanceof BitAndInstruction) {
+                                output.printf("\tand %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            /*String source2;
-                            source2 = "";
-                            if (instr.source2 instanceof VRegister) {
-                                source2 = graph.getMemory((VRegister)instr.source2);
+                            if (i instanceof BitLeftShiftInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
+                                output.printf("\tshl %s, %s\n", a, NASMRegister.cl);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr.source2 instanceof Immediate) {
-                                source2 = ((Immediate)instr.source2).toString();
+                            if (i instanceof BitOrInstruction) {
+                                output.printf("\tor %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr.source2 instanceof Address) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r11, graph.getMemory(((Address)instr.source2).base));
-                                source2 = "[" + NASMRegister.r11 + "+" + ((Address)instr.source2).offset + "]";
-                            }*/
-                            load(graph, NASMRegister.r11, instr.source2);
-                            if (instr instanceof AddInstruction) {
-                                output.printf("\tadd %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof BitRightShiftInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
+                                output.printf("\tsar %s, %s\n", a, NASMRegister.cl);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof BitAndInstruction) {
-                                output.printf("\tand %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof BitXorInstruction) {
+                                output.printf("\txor %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof BitLeftShiftInstruction) {
-                                output.printf("\tmov %s, %s\n",  NASMRegister.rcx, NASMRegister.r11);
-                                output.printf("\tshl %s, %s\n", NASMRegister.r10, NASMRegister.cl);
-                            }
-                            if (instr instanceof BitOrInstruction) {
-                                output.printf("\tor %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                            }
-                            if (instr instanceof BitRightShiftInstruction) {
-                                output.printf("\tmov %s, %s\n",  NASMRegister.rcx, NASMRegister.r11);
-                                output.printf("\tsar %s, %s\n", NASMRegister.r10, NASMRegister.cl);
-                            }
-                            if (instr instanceof BitXorInstruction) {
-                                output.printf("\txor %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                            }
-                            if (instr instanceof DivideInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rax, NASMRegister.r10);
+                            if (i instanceof DivideInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
+                                output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tidiv %s\n", NASMRegister.r10);
-                                output.printf("\tmov %s, %s\n", NASMRegister.r10, NASMRegister.rax);
+                                output.printf("\tmov %s, %s\n", a, i.source2);
+                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, NASMRegister.rax);
                             }
-                            if (instr instanceof EqualInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof EqualInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsete %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
-
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
-                            if (instr instanceof GeInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof GeInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsetge %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
-
-                            }
-                            if (instr instanceof GreaterInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);                                }
+                            if (i instanceof GreaterInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsetg %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
-
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
-                            if (instr instanceof LeInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof LeInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsetle %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
-
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
-                            if (instr instanceof LessInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof LessInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsetl %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
-
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
-                            if (instr instanceof LogicalAndInstruction) {
-                                output.printf("\tand %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof LogicalAndInstruction) {
+                                output.printf("\tand %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof LogicalOrInstruction) {
-                                output.printf("\tor %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof LogicalOrInstruction) {
+                                output.printf("\tor %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof MinusInstruction) {
-                                output.printf("\tsub %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof MinusInstruction) {
+                                output.printf("\tsub %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof ModInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rax, NASMRegister.r10);
+                            if (i instanceof ModInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
+                                output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", NASMRegister.r10, NASMRegister.r11);
-                                output.printf("\tidiv %s\n", NASMRegister.r10);
-                                output.printf("\tmov %s, %s\n", NASMRegister.r10, NASMRegister.rdx);
+                                output.printf("\tmov %s, %s\n", a, i.source2);
+                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, NASMRegister.rdx);
                             }
-                            if (instr instanceof MulInstruction) {
-                                output.printf("\timul %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof MulInstruction) {
+                                output.printf("\timul %s, %s\n", a, i.source2);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof NotEqualInstruction) {
-                                output.printf("\tcmp %s, %s\n", NASMRegister.r10, NASMRegister.r11);
+                            if (i instanceof NotEqualInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, i.source2);
                                 output.printf("\tsetne %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", NASMRegister.r10, NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
-                            output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
-                            last = instr.target;
-                        }
-                        if (instruction instanceof UnaryInstruction) {
-                            UnaryInstruction instr = (UnaryInstruction)instruction;
-                            /*String source = "";
-                            if (instr.source instanceof VRegister) {
-                                source = graph.getMemory((VRegister)instr.source);
+                            store(i.target, c);
+                        } else {
+                            PRegister a = superloadToRead(i.source1, NASMRegister.tmp1);
+                            PRegister b = loadToRead(i.source2, NASMRegister.tmp2);
+                            PRegister c = loadToWrite(i.target, NASMRegister.tmp2);
+                            if (i instanceof AddInstruction) {
+                                output.printf("\tadd %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr.source instanceof Immediate) {
-                                source = ((Immediate)instr.source).toString();
+                            if (i instanceof BitAndInstruction) {
+                                output.printf("\tand %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr.source instanceof Address) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r11, graph.getMemory(((Address)instr.source).base));
-                                source = "[" + NASMRegister.r11 + "+" + ((Address)instr.source).offset + "]";
+                            if (i instanceof BitLeftShiftInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
+                                output.printf("\tshl %s, %s\n", a, NASMRegister.cl);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            */
-                            if (last != instr.source) {
-                                load(graph, NASMRegister.r10, instr.source);
+                            if (i instanceof BitOrInstruction) {
+                                output.printf("\tor %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-
-                            if (instr instanceof BitNotInstruction) {
-                                output.printf("\tnot %s\n", NASMRegister.r10);
+                            if (i instanceof BitRightShiftInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
+                                output.printf("\tsar %s, %s\n", a, NASMRegister.cl);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            if (instr instanceof SelfMinusInstruction) {
-                                output.printf("\tneg %s\n", NASMRegister.r10);
+                            if (i instanceof BitXorInstruction) {
+                                output.printf("\txor %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
                             }
-                            output.printf("\tmov %s, %s\n", graph.getMemory((VRegister)instr.target), NASMRegister.r10);
-                            last = instr.target;
+                            if (i instanceof DivideInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
+                                output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
+                                output.printf("\tcqo\n");
+                                output.printf("\tmov %s, %s\n", a, b);
+                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, NASMRegister.rax);
+                            }
+                            if (i instanceof EqualInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsete %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
+                            if (i instanceof GeInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsetge %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);                                }
+                            if (i instanceof GreaterInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsetg %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
+                            if (i instanceof LeInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsetle %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
+                            if (i instanceof LessInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsetl %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
+                            if (i instanceof LogicalAndInstruction) {
+                                output.printf("\tand %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
+                            }
+                            if (i instanceof LogicalOrInstruction) {
+                                output.printf("\tor %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
+                            }
+                            if (i instanceof MinusInstruction) {
+                                output.printf("\tsub %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
+                            }
+                            if (i instanceof ModInstruction) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
+                                output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
+                                output.printf("\tcqo\n");
+                                output.printf("\tmov %s, %s\n", a, b);
+                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, NASMRegister.rdx);
+                            }
+                            if (i instanceof MulInstruction) {
+                                output.printf("\timul %s, %s\n", a, b);
+                                output.printf("\tmov %s, %s\n", c, a);
+                            }
+                            if (i instanceof NotEqualInstruction) {
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                output.printf("\tsetne %s\n", NASMRegister.al);
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
+                            store(i.target, c);
                         }
                     }
-                    if (instruction instanceof ControlFlowInstruction) {
-                        ControlFlowInstruction instr = (ControlFlowInstruction)instruction;
-                        if (instr instanceof BranchInstruction) {
-                            //String condition = "";
-                            BranchInstruction branch = (BranchInstruction)instr;
-                            /*if (branch.condition instanceof VRegister) {
-                                condition = graph.getMemory((VRegister)branch.condition);
-                            }
-                            if (branch.condition instanceof Immediate) {
-                                condition = ((Immediate)branch.condition).toString();
-                            }
-                            if (branch.condition instanceof Address) {
-                                output.printf("\tmov %s %s\n", NASMRegister.r11, graph.getMemory(((Address)branch.condition).base));
-                                condition = "[" + NASMRegister.r11 + "+" + ((Address)branch.condition).offset + "]";
-                            }*/
-                            if (branch.condition != last) {
-                                load(graph, NASMRegister.r10, branch.condition);
-                            }
-                            output.printf("\tcmp %s, 0\n", NASMRegister.r10);
-                            output.printf("\tjz %s\n", getBlockName(branch.falseTo.block));
-                            if (i + 1 == graph.blocks.size() || graph.blocks.get(i + 1) != branch.trueTo.block) {
-                                output.printf("\tjmp %s\n", getBlockName(branch.trueTo.block));
-                            }
+
+                    if (instruction instanceof UnaryInstruction) {
+                        UnaryInstruction i = (UnaryInstruction)instruction;
+                        PRegister a = superloadToRead(i.source, NASMRegister.tmp1);
+                        PRegister b = loadToWrite(i.target, NASMRegister.tmp2);
+                        if (i instanceof BitNotInstruction) {
+                            output.printf("\tnot %s\n", a);
+                            output.printf("\tmov %s, %s\n", b, a);
                         }
-                        if (instr instanceof JumpInstruction) {
-                            JumpInstruction jump = (JumpInstruction)instr;
-                            if (i + 1 == graph.blocks.size() || graph.blocks.get(i + 1) != jump.to.block) {
-                                output.printf("\tjmp %s\n", getBlockName(jump.to.block));
-                            }
+                        if (i instanceof SelfMinusInstruction) {
+                            output.printf("\tneg %s\n", a);
+                            output.printf("\tmov %s, %s\n", b, a);
                         }
-                        last = null;
+                        store(i.target, b);
                     }
+                }
+                if (instruction instanceof ControlFlowInstruction) {
+                    ControlFlowInstruction i = (ControlFlowInstruction)instruction;
+                    if (i instanceof BranchInstruction) {
+                        BranchInstruction branch = (BranchInstruction)i;
+                        PRegister a = loadToRead(branch.condition, NASMRegister.tmp1);
+                        output.printf("\tcmp %s, 0\n", a);
+                        output.printf("\tjz %s\n", getBlockName(branch.falseTo.block));
+                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != branch.trueTo.block) {
+                            output.printf("\tjmp %s\n", getBlockName(branch.trueTo.block));
+                        }
+                    }
+                    if (i instanceof JumpInstruction) {
+                        JumpInstruction jump = (JumpInstruction)i;
+                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != jump.to.block) {
+                            output.printf("\tjmp %s\n", getBlockName(jump.to.block));
+                        }
+                    }
+                }
 
-                    if (instruction instanceof FunctionInstruction) {
-                        if (instruction instanceof CallInstruction) {
-                            CallInstruction call = (CallInstruction)instruction;
-                            FunctionType callFunction = call.function;
+                if (instruction instanceof FunctionInstruction) {
+                    FunctionInstruction i = (FunctionInstruction)instruction;
+                    if (i instanceof CallInstruction) {
+                        CallInstruction call = (CallInstruction)i;
+                        FunctionType callFunction = call.function;
 
-                            if (callFunction.name.startsWith("Mx_builtin_")) {
-                                if (callFunction.parameters.size() >= 1) {
-                                    load(graph, NASMRegister.rdi, call.parameters.get(0));
-                                }
-                                if (callFunction.parameters.size() >= 2) {
-                                    load(graph, NASMRegister.rsi, call.parameters.get(1));
-                                }
-                                if (callFunction.parameters.size() >= 3) {
-                                    load(graph, NASMRegister.rdx, call.parameters.get(2));
-                                }
-                                if (callFunction.parameters.size() >= 4) {
-                                    load(graph, NASMRegister.rcx, call.parameters.get(3));
-                                }
-                            } else {
-                                for (int p = 0; p < callFunction.parameters.size(); p++) {
-                                    if (last != call.parameters.get(p)) {
-                                        load(graph, NASMRegister.r10, call.parameters.get(p));
-                                    }
-                                    int offset = callFunction.graph.getOffset(callFunction.parameters.get(p).register);
-                                    int fuck = callFunction.graph.getRegisters() * 8 + 24 + 8;
-                                    if ((nowRsp + 8) % 16 != 0) {
-                                        output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset + 8), NASMRegister.r10);
-                                    } else {
-                                        output.printf("\tmov %s, %s\n", String.format("[rsp-%d]", fuck - offset), NASMRegister.r10);
-                                    }
-                                    last = call.parameters.get(p);
-                                }
+
+                        if (callFunction.name.startsWith("Mx_builtin_")) {
+                            if (callFunction.parameters.size() >= 1) {
+                                move(call.parameters.get(0), NASMRegister.tmp1);
                             }
+                            if (callFunction.parameters.size() >= 2) {
+                                move(call.parameters.get(1), NASMRegister.tmp2);
+                            }
+
+                            if (callFunction.parameters.size() >= 3) {
+                                move(call.parameters.get(2), NASMRegister.rdx);
+                            }
+
+                            for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                                output.printf("\tmov qword[rsp+%d], %s\n", callerRegs.get(kk).identity * 8, callerRegs.get(kk));
+                            }
+                            if (callFunction.parameters.size() >= 1) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rdi, NASMRegister.tmp1);
+                            }
+                            if (callFunction.parameters.size() >= 2) {
+                                output.printf("\tmov %s, %s\n", NASMRegister.rsi, NASMRegister.tmp2);
+                            }
+
                             if ((nowRsp + 8) % 16 != 0) {
                                 output.printf("\tsub %s, 8\n", NASMRegister.rsp);
                                 nowRsp += 8;
@@ -315,74 +546,115 @@ public class SuperTranslator {
                             } else {
                                 output.printf("\tcall %s\n", getFunctionName(callFunction));
                             }
-                            if (call.target != null) {
-                                output.printf("\tmov %s, %s\n", graph.getMemory(call.target), NASMRegister.rax);
+                            for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                                output.printf("\tmov %s, qword[rsp+%d]\n", callerRegs.get(kk), callerRegs.get(kk).identity * 8);
                             }
-                            output.printf("\txor %s, %s\n", NASMRegister.rax, NASMRegister.rax);
-                        }
+                        } else {
+                            for (int p = 0; p < callFunction.parameters.size(); p++) {
+                                PRegister a = loadToRead(call.parameters.get(p), NASMRegister.tmp1);
+                                int offset = callFunction.graph.frame.getOffset(callFunction.parameters.get(p).register);
+                                int fuck = callFunction.graph.getRegisters() * 8 + 24 + 8;
+                                fuck = callFunction.graph.frame.size + 16;
+                                if ((nowRsp + 8) % 16 != 0) {
+                                    output.printf("\tmov %s, %s\n", String.format("qword[rsp-%d]", fuck - offset + 8), a);
+                                } else {
+                                    output.printf("\tmov %s, %s\n", String.format("qword[rsp-%d]", fuck - offset), a);
+                                }
+                            }
+                            for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                                output.printf("\tmov qword[rsp + %d], %s\n", callerRegs.get(kk).identity * 8, callerRegs.get(kk));
+                            }
+                            if ((nowRsp + 8) % 16 != 0) {
+                                output.printf("\tsub %s, 8\n", NASMRegister.rsp);
+                                nowRsp += 8;
+                                output.printf("\tcall %s\n", getFunctionName(callFunction));
+                                nowRsp -= 8;
+                                output.printf("\tadd %s, 8\n", NASMRegister.rsp);
+                            }
 
-                        if (instruction instanceof ReturnInstruction) {
-                            hasReturn = true;
-                            ReturnInstruction ret = (ReturnInstruction)instruction;
-                            load(graph, NASMRegister.rax, ret.source);
-                            output.printf("\tjmp %s\n", getBlockName(graph.exit));
+                            for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                                output.printf("\tmov %s, qword[rsp+%d]\n", callerRegs.get(kk), callerRegs.get(kk).identity * 8);
+                            }
                         }
-                        last = null;
+                        if (call.target != null) {
+                            move(NASMRegister.rax, call.target);
+                        }
+                        output.printf("\txor %s, %s\n", NASMRegister.rax, NASMRegister.rax);
                     }
 
-                    if (instruction instanceof MemoryInstruction) {
-                        if (instruction instanceof AllocateInstruction) {
-                            load(graph, NASMRegister.rdi, ((AllocateInstruction)instruction).size);
-                            if ((nowRsp + 8) % 16 != 0) {
-                                output.printf("\tsub rsp, 8\n");
-                                nowRsp += 8;
-                                output.printf("\tcall malloc\n");
-                                nowRsp -= 8;
-                                output.printf("\tadd rsp, 8\n");
-                            } else {
-                                output.printf("\tcall malloc\n");
-                            }
-                            output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
-                            // last = ((AllocateInstruction)instruction).target;
+                    if (i instanceof ReturnInstruction) {
+                        ReturnInstruction ret = (ReturnInstruction)i;
+                        if (ret.source == null) {
+                            output.printf("\txor %s, %s\n", NASMRegister.rax);
+                        } else {
+                            move(ret.source, NASMRegister.rax);
                         }
-                        if (instruction instanceof LoadInstruction) {
-                            LoadInstruction ld = (LoadInstruction)instruction;
+                        output.printf("\tjmp %s\n", getBlockName(graph.exit));
+                    }
+                }
 
-                            load(graph, NASMRegister.r10, ld.address);
-                            output.printf("\tmov %s, %s\n", graph.getMemory(ld.target), NASMRegister.r10);
-                            last = ld.target;
+                if (instruction instanceof MemoryInstruction) {
+                    MemoryInstruction i = (MemoryInstruction)instruction;
+                    if (i instanceof AllocateInstruction) {
+                        AllocateInstruction alloc = (AllocateInstruction)i;
+
+                        for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                            output.printf("\tmov qword[rsp+%d], %s\n", callerRegs.get(kk).identity * 8, callerRegs.get(kk));
                         }
-                        if (instruction instanceof MoveInstruction) {
-                            MoveInstruction mov = (MoveInstruction)instruction;
-                            load(graph, NASMRegister.r10, mov.source);
-                            output.printf("\tmov %s, %s\n", graph.getMemory(mov.target), NASMRegister.r10);
-                            last = mov.target;
+                       // output.printf("\tadd rsp %d\n", callerRegs.size() * 8);
+                        move(alloc.size, NASMRegister.rdi);
+                       // output.printf("\tsub rsp %d\n", callerRegs.size() * 8);
+                        if ((nowRsp + 8) % 16 != 0) {
+                            output.printf("\tsub rsp, 8\n");
+                            nowRsp += 8;
+                            output.printf("\tcall malloc\n");
+                            nowRsp -= 8;
+                            output.printf("\tadd rsp, 8\n");
+                        } else {
+                            output.printf("\tcall malloc\n");
                         }
-                        if (instruction instanceof StoreInstruction) {
-                            StoreInstruction store = (StoreInstruction)instruction;
-                            load(graph, NASMRegister.r10, store.source);
-                            load(graph, NASMRegister.r11, store.address.base);
-                            String address = "[" + NASMRegister.r11 + "+" + (store.address.offset).toString() + "]";
-                            output.printf("\tmov %s, %s\n", address, NASMRegister.r10);
-                            last = store.address;
+                        for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
+                            output.printf("\tmov %s, qword[rsp+%d]\n", callerRegs.get(kk), callerRegs.get(kk).identity * 8);
+                        }
+                    }
+
+                    if (i instanceof LoadInstruction) {
+                        LoadInstruction ld = (LoadInstruction)instruction;
+                        PRegister a = loadToRead(ld.address.base, NASMRegister.tmp1);
+                        PRegister b = loadToWrite(ld.target, NASMRegister.tmp2);
+                        output.printf("\tmov %s, qword[%s+%d]\n", b, a, ld.address.offset.value);
+                        store(ld.target, b);
+                    }
+                    if (i instanceof StoreInstruction) {
+                        StoreInstruction st = (StoreInstruction)i;
+                        PRegister a = loadToRead(st.address.base, NASMRegister.tmp1);
+                        PRegister b = loadToRead(st.source, NASMRegister.tmp2);
+                        output.printf("\tmov qword[%s + %d], %s\n", a, st.address.offset.value, b);
+                    }
+
+                    if (i instanceof MoveInstruction) {
+                        MoveInstruction mv = (MoveInstruction)i;
+                        if (mv.source instanceof Immediate) {
+                            PRegister a = loadToWrite(mv.target, NASMRegister.tmp1);
+                            output.printf("\tmov %s, %s\n", a, mv.source);
+                            store(mv.target, a);
+                        } else {
+                            PRegister a = loadToRead(mv.source, NASMRegister.tmp1);
+                            move(a, mv.target);
                         }
                     }
                 }
             }
-          /*  if (graph.function.name.equals("main")) {
-                if (!hasReturn) {
-                    output.printf("\txor %s %s\n", NASMRegister.rax, NASMRegister.rax);
-                    output.printf("\tmov %s %s\n", NASMRegister.rax, "0");
-                }
-            }*/
-
-            output.printf("\tadd rsp, %d\n", nowRsp - 8);
-            output.printf("\tpop rbp\n");
-            output.printf("\tret\n");
         }
 
-        output.printf("%s\n", BuiltinTranslator.getDataSection());
-        output.printf("%s\n", BuiltinTranslator.getBssSection());
+        if (!graph.function.name.equals("main")) {
+            for (int kk = 0; kk < (int)calleeRegs.size(); kk++) {
+                output.printf("\tmov %s, qword[rsp + %d]\n", calleeRegs.get(kk), calleeRegs.get(kk).identity * 8);
+            }
+        }
 
+        output.printf("\tadd rsp, %d\n", graph.frame.size);
+        output.printf("\tpop rbp\n");
+        output.printf("\tret\n");
     }
 }

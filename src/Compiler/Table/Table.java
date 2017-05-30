@@ -1,5 +1,6 @@
 package Compiler.Table;
 
+import Compiler.Expression.Expression;
 import Compiler.Scope.ScopeTable;
 import Compiler.Scope.Scope;
 import Compiler.Symbol.Symbol;

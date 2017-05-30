@@ -4,9 +4,8 @@ package Compiler;
  * Created by SteinerT on 2017/4/5.
  */
 
-import Compiler.IR.Block;
-import Compiler.IR.Graph;
-import Compiler.IR.Instruction;
+import Compiler.Allocator.GlobalRegisterAllocator.GlobalRegisterAllocator;
+import Compiler.IR.*;
 import Compiler.Listener.FirstRoundListener;
 import Compiler.Listener.SecondRoundListener;
 import Compiler.Listener.TreeBuilderListener;
@@ -28,6 +27,7 @@ public class Main {
     public static void printIR() {
         for (FunctionType function : Table.program.functions) {
             function.graph = new Graph(function);
+            function.allocator = new GlobalRegisterAllocator(function);
         }
         //return;
 /*
@@ -43,10 +43,9 @@ public class Main {
         }
 */
     }
-    public static void translate() {
-        int totRegisters = Table.registerTable.registers.size();
-        int reservedSpace = totRegisters * 8;
 
+    public static String getGlobalName(String name) {
+        return "GLOBAL_V_" + name;
     }
 
     public static void main(String[] args) throws Exception {
@@ -71,10 +70,14 @@ public class Main {
         printIR();
         System.out.printf("\n\n");
         FileOutputStream tmp = new FileOutputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/mytrans.asm");
-        PrintStream myout = new PrintStream(tmp);
-        Translator myTranslator = new Translator(System.out);
+        PrintStream output = new PrintStream(tmp);
+
+        SuperTranslator superTranslator = new SuperTranslator(System.out);
+        //superTranslator = new SuperTranslator(output);
+        superTranslator.translate();
+        //Translator myTranslator = new Translator(System.out);
         //myTranslator = new Translator(myout);
-        myTranslator.translate();
+        //myTranslator.translate();
 
     }
 }

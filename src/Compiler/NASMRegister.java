@@ -25,6 +25,9 @@ public class NASMRegister extends PRegister{
     public static PRegister cl = new NASMRegister(16,"cl");
     public static PRegister al = new NASMRegister(17,"al");
 
+
+    public static PRegister tmp1 = r10;
+    public static PRegister tmp2 = r11;
     public NASMRegister(int identity, String name) {
         super(identity, name);
     }

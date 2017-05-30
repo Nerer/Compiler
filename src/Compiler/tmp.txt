@@ -1,34 +1,10 @@
-------
-printNum enter
--------
-
-------
-printNum entry
--------
-
-------
-main enter
--------
-enter
-jump %entry
-entry
-$t5 = call Mx_builtin_toString
-null = call Mx_builtin_println
-jump %exit
-exit
-enter
-$t6 = move 4
-$t6 = add $t6 1
-$t6 = mul $t6 8
-$t7 = alloc $t6
-store 4 to [$t7+0]
-$t7 = add $t7 8
-$g0 = move $t7
-$t8 = move 5
-$t8 = add $t8 1
-$t8 = mul $t8 8
-$t9 = alloc $t8
-store 5 to [$t9+0]
-$t9 = add $t9 8
-$t8 = move 5
-exit
+int mm(int a, int b) {
+    return a + b;
+}
+int main() {
+    int a = 1;
+    int b = 2;
+    int c = mm(a, b);
+    println(toString(c));
+    return 0;
+}

@@ -1,6 +1,7 @@
 package Compiler.Type;
 
 import Compiler.AST.ASTNode;
+import Compiler.Allocator.Allocator;
 import Compiler.IR.ControlFlowIR.LabelInstruction;
 import Compiler.IR.Graph;
 import Compiler.Scope.Scope;
@@ -21,7 +22,7 @@ public class FunctionType extends Type implements ASTNode, Scope {
     public LabelInstruction enter, entry, exit;
     public BlockStatement statements;
     public Graph graph;
-
+    public Allocator allocator;
     public FunctionType(String name, Type returnType, List<Symbol> parameters) {
         this.name = name;
         this.returnType = returnType;
