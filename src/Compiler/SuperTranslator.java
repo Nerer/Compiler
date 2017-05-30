@@ -277,7 +277,7 @@ public class SuperTranslator {
             output.printf("\n%s:\n", getBlockName(block));
             for (int l = 0; l < block.instructions.size(); l++) {
                 Instruction instruction = block.instructions.get(l);
-                //System.out.println(instruction);
+              //  System.out.println(instruction);
                 if (instruction instanceof ArithmeticInstruction) {
                     if (instruction instanceof BinaryInstruction) {
                         BinaryInstruction i = (BinaryInstruction)instruction;
@@ -288,6 +288,8 @@ public class SuperTranslator {
                                 continue;
                             }
                         }
+                       // System.out.println(instruction);
+
                         if (i.source2 instanceof Immediate) {
                             PRegister a = superloadToRead(i.source1, NASMRegister.tmp1);
                             PRegister c = loadToRead(i.target, NASMRegister.tmp2);
@@ -425,7 +427,8 @@ public class SuperTranslator {
                             if (i instanceof GeInstruction) {
                                 output.printf("\tcmp %s, %s\n", a, b);
                                 output.printf("\tsetge %s\n", NASMRegister.al);
-                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);                                }
+                                output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
+                            }
                             if (i instanceof GreaterInstruction) {
                                 output.printf("\tcmp %s, %s\n", a, b);
                                 output.printf("\tsetg %s\n", NASMRegister.al);
@@ -490,24 +493,50 @@ public class SuperTranslator {
                     }
                 }
                 if (instruction instanceof ControlFlowInstruction) {
-                    ControlFlowInstruction i = (ControlFlowInstruction)instruction;
-                    if (i instanceof BranchInstruction) {
-                        BranchInstruction branch = (BranchInstruction)i;
-                        PRegister a = loadToRead(branch.condition, NASMRegister.tmp1);
-                        output.printf("\tcmp %s, 0\n", a);
-                        output.printf("\tjz %s\n", getBlockName(branch.falseTo.block));
-                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != branch.trueTo.block) {
-                            output.printf("\tjmp %s\n", getBlockName(branch.trueTo.block));
+                    if (instruction instanceof BranchInstruction) {
+                        BranchInstruction i = (BranchInstruction) instruction;
+                        if (reserved == null) {
+                            PRegister a = loadToRead(i.condition, NASMRegister.tmp1);
+                            output.printf("\tcmp %s, 0\n", a);
+                            output.printf("\tje %s\n", getBlockName(i.falseTo.block));
+                        } else {
+                            BinaryInstruction j = (BinaryInstruction) reserved;
+                            if (j instanceof BitXorInstruction) {
+                                PRegister a = loadToRead(j.source1, NASMRegister.tmp1);
+                                output.printf("\tcmp %s, 0\n", a);
+                                output.printf("\tje %s\n", getBlockName(i.falseTo.block));
+                            } else {
+                                PRegister a = loadToRead(j.source1, NASMRegister.tmp1);
+                                PRegister b = loadToRead(j.source2, NASMRegister.tmp2);
+                                output.printf("\tcmp %s, %s\n", a, b);
+                                if (j instanceof EqualInstruction) {
+                                    output.printf("\tjne %s\n", getBlockName(i.falseTo.block));
+                                } else if (j instanceof GreaterInstruction) {
+                                    output.printf("\tjle %s\n", getBlockName(i.falseTo.block));
+                                } else if (j instanceof GeInstruction) {
+                                    output.printf("\tjl %s\n", getBlockName(i.falseTo.block));
+                                } else if (j instanceof LessInstruction) {
+                                    output.printf("\tjge %s\n", getBlockName(i.falseTo.block));
+                                } else if (j instanceof LeInstruction) {
+                                    output.printf("\tjg %s\n", getBlockName(i.falseTo.block));
+                                } else if (j instanceof NotEqualInstruction) {
+                                    output.printf("\tje %s\n", getBlockName(i.falseTo.block));
+                                }
+                            }
+                            reserved = null;
                         }
-                    }
-                    if (i instanceof JumpInstruction) {
-                        JumpInstruction jump = (JumpInstruction)i;
-                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != jump.to.block) {
-                            output.printf("\tjmp %s\n", getBlockName(jump.to.block));
+                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != i.trueTo.block) {
+                            output.printf("\tjmp %s\n", getBlockName(i.trueTo.block));
                         }
+                    } else if (instruction instanceof JumpInstruction) {
+                        JumpInstruction i = (JumpInstruction) instruction;
+                        if (k + 1 == graph.blocks.size() || graph.blocks.get(k + 1) != i.to.block) {
+                            output.printf("\tjmp %s\n", getBlockName(i.to.block));
+                        }
+                    } else {
+                        throw new InternalError();
                     }
                 }
-
                 if (instruction instanceof FunctionInstruction) {
                     FunctionInstruction i = (FunctionInstruction)instruction;
                     if (i instanceof CallInstruction) {
