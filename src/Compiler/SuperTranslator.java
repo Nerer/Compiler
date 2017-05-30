@@ -18,7 +18,6 @@ import Compiler.IR.FunctionIR.ReturnInstruction;
 import Compiler.IR.MemoryIR.*;
 import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
-import sun.tools.jconsole.Tab;
 
 import java.io.PrintStream;
 import java.util.*;
