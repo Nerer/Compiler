@@ -501,6 +501,7 @@ public class SuperTranslator {
                             output.printf("\tje %s\n", getBlockName(i.falseTo.block));
                         } else {
                             BinaryInstruction j = (BinaryInstruction) reserved;
+                       // System.out.println(j);
                             if (j instanceof BitXorInstruction) {
                                 PRegister a = loadToRead(j.source1, NASMRegister.tmp1);
                                 output.printf("\tcmp %s, 0\n", a);
@@ -599,6 +600,8 @@ public class SuperTranslator {
                                 output.printf("\tcall %s\n", getFunctionName(callFunction));
                                 nowRsp -= 8;
                                 output.printf("\tadd %s, 8\n", NASMRegister.rsp);
+                            } else {
+                                output.printf("\tcall %s\n", getFunctionName(callFunction));
                             }
 
                             for (int kk = 0; kk < (int)callerRegs.size(); kk++) {

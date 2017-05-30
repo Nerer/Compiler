@@ -30,7 +30,7 @@ public class Main {
             function.allocator = new GlobalRegisterAllocator(function);
         }
         //return;
-/*
+
         for (FunctionType function : Table.program.functions) {
             Graph graph = function.graph;
             for (int i = 0; i < graph.blocks.size(); i++) {
@@ -41,7 +41,7 @@ public class Main {
                 }
             }
         }
-*/
+
     }
 
     public static String getGlobalName(String name) {

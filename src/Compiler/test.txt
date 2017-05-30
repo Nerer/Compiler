@@ -1,10 +1,14 @@
-int main() {
-    int n = 20;
-    int sum = 0;
-    int i = 1;
-    while (i <= n) {
-        sum = sum + i;
-        i = i+1;
+int tak(int x, int y, int z) {
+    if(y < x) {
+        return 1 + tak( tak(x - 1, y , z),
+            tak(y - 1, z , x),
+            tak(z - 1, x , y)
+        );
+    } else {
+       return z;
     }
-    println(toString(sum));
+}
+
+int main() {
+    println(toString( tak(18,12,6)));
 }
