@@ -14,7 +14,6 @@ import Compiler.Table.ClassTable;
 import Compiler.Table.Table;
 import Compiler.Type.*;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,6 +96,8 @@ public class NewExpression extends Expression{
         if (flag != 0) {
             instructions.add(MoveInstruction.getInstruction(size, expressions.get(dim).operand));
             LabelInstruction loop = new LabelInstruction("while_loop");
+            Instruction jump = JumpInstruction.getInstruction(loop);
+            instructions.add(jump);
             instructions.add(loop);
             instructions.add(MinusInstruction.getInstruction(size, size, Immediate.getImmediate(1)));
 
