@@ -73,7 +73,7 @@ public class Main {
         PrintStream output = new PrintStream(tmp);
 
         SuperTranslator superTranslator = new SuperTranslator(System.out);
-        superTranslator = new SuperTranslator(output);
+       // superTranslator = new SuperTranslator(output);
         /*if (Table.program.variables.size() == 3) {
             if (Table.program.variables.get(0).symbol.name.equals("A") &&
                     Table.program.variables.get(1).symbol.name.equals("B") &&
