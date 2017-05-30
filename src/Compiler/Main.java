@@ -72,12 +72,12 @@ public class Main {
         FileOutputStream tmp = new FileOutputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/mytrans.asm");
         PrintStream output = new PrintStream(tmp);
 
-        SuperTranslator superTranslator = new SuperTranslator(System.out);
+        //SuperTranslator superTranslator = new SuperTranslator(System.out);
         //superTranslator = new SuperTranslator(output);
-        superTranslator.translate();
-        //Translator myTranslator = new Translator(System.out);
+        //superTranslator.translate();
+        Translator myTranslator = new Translator(System.out);
         //myTranslator = new Translator(myout);
-        //myTranslator.translate();
+        myTranslator.translate();
 
     }
 }
