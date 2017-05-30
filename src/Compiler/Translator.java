@@ -341,7 +341,7 @@ public class Translator {
                                 output.printf("\tcall malloc\n");
                             }
                             output.printf("\tmov %s, %s\n", graph.getMemory(((AllocateInstruction)instruction).target), NASMRegister.rax);
-                            last = ((AllocateInstruction)instruction).target;
+                           // last = ((AllocateInstruction)instruction).target;
                         }
                         if (instruction instanceof LoadInstruction) {
                             LoadInstruction ld = (LoadInstruction)instruction;

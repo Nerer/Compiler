@@ -73,7 +73,7 @@ public class Main {
         FileOutputStream tmp = new FileOutputStream("/Users/SteinerT/Desktop/Compiler/myCompiler/src/Compiler/mytrans.asm");
         PrintStream myout = new PrintStream(tmp);
         Translator myTranslator = new Translator(System.out);
-        //myTranslator = new Translator(myout);
+      //  myTranslator = new Translator(myout);
         myTranslator.translate();
 
     }
