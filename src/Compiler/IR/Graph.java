@@ -35,8 +35,8 @@ public class Graph {
     }
     public void refresh() {
         this.refreshGraph();
-        //this.analysisLiveliness();
-        //this.analysisFrame();
+        this.analysisLiveliness();
+        this.analysisFrame();
     }
     public void refreshGraph() {
         for (Block block : blocks) {
@@ -66,7 +66,6 @@ public class Graph {
 
     public List<Block> depthFirstSearch(Block block, Set<Block> visit) {
         visit.add(block);
-        System.out.printf("\n------\n%s\n-------\n", block.function.name + " " + block.name);
         List<Block> list = new ArrayList<Block>() {{
             add(block);
         }};
