@@ -505,7 +505,7 @@ public class SuperTranslator {
                             if (j instanceof BitXorInstruction) {
                                 PRegister a = loadToRead(j.source1, NASMRegister.tmp1);
                                 output.printf("\tcmp %s, 0\n", a);
-                                output.printf("\tje %s\n", getBlockName(i.falseTo.block));
+                                output.printf("\tjne %s\n", getBlockName(i.falseTo.block));
                             } else {
                                 PRegister a = loadToRead(j.source1, NASMRegister.tmp1);
                                 PRegister b = loadToRead(j.source2, NASMRegister.tmp2);
