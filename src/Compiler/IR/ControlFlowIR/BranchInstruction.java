@@ -3,6 +3,10 @@ package Compiler.IR.ControlFlowIR;
 import Compiler.IR.Immediate;
 import Compiler.IR.Instruction;
 import Compiler.IR.Operand;
+import Compiler.IR.VRegister;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by SteinerT on 2017/5/20.
@@ -37,4 +41,26 @@ public class BranchInstruction extends ControlFlowInstruction{
     public String toString() {
         return "br " + condition + " " + trueTo.name + " " + falseTo.name;
     }
+
+    @Override
+    public List<Operand> getDefinedOperands() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Operand> getUsedOperands() {
+        return Collections.singletonList(condition);
+    }
+
+    @Override
+    public void setDefinedRegister(VRegister from, VRegister to) {
+    }
+
+    @Override
+    public void setUsedRegister(VRegister from, Operand to) {
+        if (condition == from) {
+            condition = to;
+        }
+    }
+
 }

@@ -3,9 +3,12 @@ package Compiler.IR.FunctionIR;
 import Compiler.IR.Instruction;
 import Compiler.IR.Operand;
 import Compiler.IR.VRegister;
+import Compiler.Statement.VarDeclarationStatement;
+import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -35,5 +38,48 @@ public class CallInstruction extends FunctionInstruction {
     @Override
     public String toString() {
         return target +" = call " + function.name;
+    }
+
+
+    @Override
+    public List<Operand> getDefinedOperands() {
+        return new ArrayList<Operand>() {{
+            if (target != null) {
+                add(target);
+            }
+            if (!function.name.startsWith("____builtin")) {
+                for (VarDeclarationStatement variable : Table.program.variables) {
+                    add(variable.symbol.register);
+                }
+            }
+        }};
+    }
+
+    @Override
+    public List<Operand> getUsedOperands() {
+        return new ArrayList<Operand>() {{
+            addAll(parameters);
+            if (!function.name.startsWith("____builtin")) {
+                for (VarDeclarationStatement variable : Table.program.variables) {
+                    add(variable.symbol.register);
+                }
+            }
+        }};
+    }
+
+    @Override
+    public void setDefinedRegister(VRegister from, VRegister to) {
+        if (target == from) {
+            target = to;
+        }
+    }
+
+    @Override
+    public void setUsedRegister(VRegister from, Operand to) {
+        for (int i = 0; i < parameters.size(); ++i) {
+            if (parameters.get(i) == from) {
+                parameters.set(i, to);
+            }
+        }
     }
 }

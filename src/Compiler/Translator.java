@@ -1,5 +1,6 @@
 package Compiler;
 
+import Compiler.Allocator.PRegister;
 import Compiler.IR.*;
 import Compiler.IR.ArithmeticIR.ArithmeticInstruction;
 import Compiler.IR.ArithmeticIR.Binary.*;
@@ -43,7 +44,8 @@ public class Translator {
     String getGlobalName(String name) {
         return "GLOBAL_V_" + name;
     }
-    void load(Graph graph, String reg, Operand operand) {
+
+    void load(Graph graph, PRegister reg, Operand operand) {
         if (operand instanceof VRegister) {
             if (operand instanceof GlobalRegister) {
                 output.printf("\tmov %s, %s\n", reg, String.format("[rel %s]", getGlobalName(((GlobalRegister)operand).symbol.name)));

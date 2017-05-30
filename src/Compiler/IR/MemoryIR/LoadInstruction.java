@@ -5,6 +5,9 @@ import Compiler.IR.Instruction;
 import Compiler.IR.Operand;
 import Compiler.IR.VRegister;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by SteinerT on 2017/5/22.
  */
@@ -28,4 +31,29 @@ public class LoadInstruction extends MemoryInstruction {
     public String toString() {
         return String.format("%s = load %s %s %s", target, address.size, address.base, address.offset);
     }
+
+    @Override
+    public List<Operand> getDefinedOperands() {
+        return Collections.singletonList(target);
+    }
+
+    @Override
+    public List<Operand> getUsedOperands() {
+        return Collections.singletonList(address.base);
+    }
+
+    @Override
+    public void setDefinedRegister(VRegister from, VRegister to) {
+        if (target == from) {
+            target = to;
+        }
+    }
+
+    @Override
+    public void setUsedRegister(VRegister from, Operand to) {
+        if (address.base == from) {
+            address = new Address((VRegister) to, address.offset);
+        }
+    }
+
 }

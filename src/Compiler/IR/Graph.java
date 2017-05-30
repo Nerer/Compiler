@@ -12,13 +12,11 @@ import Compiler.IR.FunctionIR.FunctionInstruction;
 import Compiler.IR.FunctionIR.ReturnInstruction;
 import Compiler.IR.MemoryIR.*;
 import Compiler.Statement.VarDeclarationStatement;
+import Compiler.Symbol.Symbol;
 import Compiler.Table.Table;
 import Compiler.Type.FunctionType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by SteinerT on 2017/5/26.
@@ -33,6 +31,57 @@ public class Graph {
         this.function = function;
         this.buildGraph();
         this.calcRegisters();
+        this.refresh();
+    }
+    public void refresh() {
+        this.refreshGraph();
+        this.analysisLiveliness();
+        this.analysisFrame();
+    }
+    public void refreshGraph() {
+        for (Block block : blocks) {
+            block.successors = new ArrayList<>();
+            block.predecessors = new ArrayList<>();
+        }
+        for (Block block : blocks) {
+            if (!block.instructions.isEmpty()) {
+                Instruction instruction = block.instructions.get(block.instructions.size() - 1);
+                if (instruction instanceof JumpInstruction) {
+                    JumpInstruction i = (JumpInstruction)instruction;
+                    block.successors.add(i.to.block);
+                } else if (instruction instanceof BranchInstruction) {
+                    BranchInstruction i = (BranchInstruction)instruction;
+                    block.successors.add(i.trueTo.block);
+                    block.successors.add(i.falseTo.block);
+                }
+            }
+        }
+        blocks = depthFirstSearch(enter, new HashSet<>());
+        for (Block block : blocks) {
+            for (Block successor : block.successors) {
+                successor.predecessors.add(block);
+            }
+        }
+    }
+
+    public List<Block> depthFirstSearch(Block block, Set<Block> visit) {
+        visit.add(block);
+        List<Block> list = new ArrayList<Block>() {{
+            add(block);
+        }};
+        for (Block successor : block.successors) {
+            if (visit.contains(successor)) {
+                continue;
+            }
+            if (successor != exit) {
+                visit.add(successor);
+                list.addAll(depthFirstSearch(successor, visit));
+            }
+        }
+        if (block == enter) {
+            list.add(exit);
+        }
+        return list;
     }
 
     public void buildGraph() {
@@ -200,6 +249,81 @@ public class Graph {
         return block;
     }
 
+    private void analysisLiveliness() {
+        for (Block block : blocks) {
+            block.liveliness.used = new ArrayList<>();
+            block.liveliness.defined = new ArrayList<>();
+            for (Instruction instruction : block.instructions) {
+                for (VRegister register : instruction.getUsedRegisters()) {
+                    if (!block.liveliness.defined.contains(register)) {
+                        block.liveliness.used.add(register);
+                    }
+                }
+                for (VRegister register : instruction.getDefinedRegisters()) {
+                    block.liveliness.defined.add(register);
+                }
+            }
+        }
+        for (Block block : blocks) {
+            block.liveliness.liveIn = new HashSet<>();
+            block.liveliness.liveOut = new HashSet<>();
+        }
+        while (true) {
+            for (Block block : blocks) {
+                block.liveliness.liveIn = new HashSet<VRegister>() {{
+                    block.liveliness.liveOut.forEach(this::add);
+                    block.liveliness.defined.forEach(this::remove);
+                    block.liveliness.used.forEach(this::add);
+                }};
+            }
+            boolean modified = false;
+            for (Block block : blocks) {
+                Set<VRegister> origin = block.liveliness.liveOut;
+                block.liveliness.liveOut = new HashSet<VRegister>() {{
+                    for (Block successor : block.successors) {
+                        addAll(successor.liveliness.liveIn);
+                    }
+                }};
+                if (!block.liveliness.liveOut.equals(origin)) {
+                    modified = true;
+                }
+            }
+            if (!modified) {
+                break;
+            }
+        }
+    }
+
+    private void analysisFrame() {
+        Set<VRegister> registers = new HashSet<VRegister>() {{
+            for (Block block : blocks) {
+                for (Instruction instruction : block.instructions) {
+                    for (VRegister register : instruction.getUsedRegisters()) {
+                        if (register instanceof TempRegister) {
+                            add(register);
+                        }
+                    }
+                    for (VRegister register : instruction.getDefinedRegisters()) {
+                        if (register instanceof TempRegister) {
+                            add(register);
+                        }
+                    }
+                }
+            }
+        }};
+        frame = new Frame();
+        frame.size += 8 * 18;
+        for (VRegister register : registers) {
+            frame.temporary.put(register, frame.size);
+            frame.size += 8;
+        }
+        for (Symbol parameter : function.parameters) {
+            frame.parameter.put(parameter.register, frame.size);
+            frame.size += 8;
+        }
+    }
+
+
     public class Frame {
         public int size;
         public Map<VRegister, Integer> temporary, parameter;
@@ -222,5 +346,7 @@ public class Graph {
             throw new InternalError();
         }
     }
+
+
 
 }
