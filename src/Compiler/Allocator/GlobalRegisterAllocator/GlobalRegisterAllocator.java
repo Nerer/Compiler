@@ -17,60 +17,65 @@ import java.util.Set;
 public class GlobalRegisterAllocator extends Allocator{
     public GlobalRegisterAllocator(FunctionType function) {
         super(function);
-        function.graph.refresh();
-        InterferenceGraph graph = new InterferenceGraph();
+        InterferenceGraph interGraph = new InterferenceGraph();
         for (Block block : function.graph.blocks) {
             for (Instruction instruction : block.instructions) {
-                for (VRegister register : instruction.getUsedRegisters()) {
-                    graph.add(register);
-                }
                 for (VRegister register : instruction.getDefinedRegisters()) {
-                    graph.add(register);
+                    interGraph.add(register);
+                }
+                for (VRegister register : instruction.getUsedRegisters()) {
+                    interGraph.add(register);
                 }
             }
         }
         for (Block block : function.graph.blocks) {
-            Set<VRegister> live = new HashSet<VRegister>() {{
-                block.liveliness.liveOut.forEach(this::add);
-            }};
-            for (int i = block.instructions.size() - 1; i >= 0; --i) {
+            Set<VRegister> living = new HashSet<>();
+            for (VRegister register : block.liveliness.liveOut) {
+                living.add(register);
+            }
+            for (int i = block.instructions.size() - 1; i >= 0; i--) {
                 Instruction instruction = block.instructions.get(i);
                 if (instruction instanceof BinaryInstruction) {
-                    for (VRegister out : live) {
-                        graph.forbid(((BinaryInstruction) instruction).target, out);
+                    for (VRegister livingRegister : living) {
+                        interGraph.forbid(((BinaryInstruction) instruction).target, livingRegister);
                     }
-                    live.remove(((BinaryInstruction) instruction).target);
-                    if (((BinaryInstruction) instruction).source2 instanceof VRegister){
-                        live.add((VRegister) ((BinaryInstruction) instruction).source2);
+                    living.remove(((BinaryInstruction) instruction).target);
+                    if (((BinaryInstruction) instruction).source2 instanceof VRegister) {
+                        living.add((VRegister) ((BinaryInstruction) instruction).source2);
                     }
-                    for (VRegister out : live) {
-                        graph.forbid(((BinaryInstruction) instruction).target, out);
+
+                    for (VRegister livingRegister : living) {
+                        interGraph.forbid(((BinaryInstruction) instruction).target, livingRegister);
                     }
-                    live.remove(((BinaryInstruction) instruction).target);
-                    if (((BinaryInstruction) instruction).source1 instanceof VRegister){
-                        live.add((VRegister) ((BinaryInstruction) instruction).source1);
+                    living.remove(((BinaryInstruction) instruction).target);
+                    if (((BinaryInstruction) instruction).source1 instanceof VRegister) {
+                        living.add((VRegister) ((BinaryInstruction) instruction).source1);
                     }
                 } else {
                     for (VRegister register : instruction.getDefinedRegisters()) {
-                        for (VRegister living : live) {
-                            graph.forbid(register, living);
+                        for (VRegister livingRegister : living) {
+                            interGraph.forbid(register, livingRegister);
                         }
                     }
-                    instruction.getDefinedRegisters().forEach(live::remove);
-                    instruction.getUsedRegisters().forEach(live::add);
+                    for (VRegister register : instruction.getDefinedRegisters()) {
+                        living.remove(register);
+                    }
+                    for (VRegister register : instruction.getUsedRegisters()) {
+                        living.add(register);
+                    }
                 }
             }
         }
         for (Block block : function.graph.blocks) {
             for (Instruction instruction : block.instructions) {
                 if (instruction instanceof MoveInstruction) {
-                    MoveInstruction i = (MoveInstruction)instruction;
-                    if (i.source instanceof VRegister) {
-                        graph.recommend(i.target, (VRegister)i.source);
+                    if (((MoveInstruction) instruction).source instanceof VRegister) {
+                        interGraph.recommend(((MoveInstruction) instruction).target,
+                                (VRegister) ((MoveInstruction) instruction).source);
                     }
                 }
             }
         }
-        mapping = new ChaitinGraphColoring(graph).analysis();
+        mapping = new ChaitinGraphColoring(interGraph).analysis();
     }
 }

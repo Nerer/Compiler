@@ -291,40 +291,40 @@ public class SuperTranslator {
                        // System.out.println(instruction);
 
                         if (i.source2 instanceof Immediate) {
-                            PRegister a = superloadToRead(i.source1, NASMRegister.tmp1);
+                            PRegister a = loadToRead(i.source1, NASMRegister.tmp1);
                             PRegister c = loadToRead(i.target, NASMRegister.tmp2);
                             if (i instanceof AddInstruction) {
-                                output.printf("\tadd %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tadd %s, %s\n", c, i.source2);
                             }
                             if (i instanceof BitAndInstruction) {
-                                output.printf("\tand %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tand %s, %s\n", c, i.source2);
                             }
                             if (i instanceof BitLeftShiftInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
-                                output.printf("\tshl %s, %s\n", a, NASMRegister.cl);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
+                                output.printf("\tshl %s, %s\n", c, NASMRegister.cl);
                             }
                             if (i instanceof BitOrInstruction) {
-                                output.printf("\tor %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tor %s, %s\n", c, i.source2);
                             }
                             if (i instanceof BitRightShiftInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
-                                output.printf("\tsar %s, %s\n", a, NASMRegister.cl);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, i.source2);
+                                output.printf("\tsar %s, %s\n", c, NASMRegister.cl);
                             }
                             if (i instanceof BitXorInstruction) {
-                                output.printf("\txor %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\txor %s, %s\n", c, i.source2);
                             }
                             if (i instanceof DivideInstruction) {
                                 output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
                                 output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", a, i.source2);
-                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, i.source2);
+                                output.printf("\tidiv %s\n", c);
                                 output.printf("\tmov %s, %s\n", c, NASMRegister.rax);
                             }
                             if (i instanceof EqualInstruction) {
@@ -352,28 +352,28 @@ public class SuperTranslator {
                                 output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
                             if (i instanceof LogicalAndInstruction) {
-                                output.printf("\tand %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tand %s, %s\n", c, i.source2);
                             }
                             if (i instanceof LogicalOrInstruction) {
-                                output.printf("\tor %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tor %s, %s\n", c, i.source2);
                             }
                             if (i instanceof MinusInstruction) {
-                                output.printf("\tsub %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tsub %s, %s\n", c, i.source2);
                             }
                             if (i instanceof ModInstruction) {
                                 output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
                                 output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", a, i.source2);
-                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, i.source2);
+                                output.printf("\tidiv %s\n", c);
                                 output.printf("\tmov %s, %s\n", c, NASMRegister.rdx);
                             }
                             if (i instanceof MulInstruction) {
-                                output.printf("\timul %s, %s\n", a, i.source2);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\timul %s, %s\n", c, i.source2);
                             }
                             if (i instanceof NotEqualInstruction) {
                                 output.printf("\tcmp %s, %s\n", a, i.source2);
@@ -386,38 +386,36 @@ public class SuperTranslator {
                             PRegister b = loadToRead(i.source2, NASMRegister.tmp2);
                             PRegister c = loadToWrite(i.target, NASMRegister.tmp2);
                             if (i instanceof AddInstruction) {
-                                //output.printf("\tadd %s, %s\n", a, b);
-                                //output.printf("\tmov %s, %s\n", c, a);
                                 output.printf("\tlea %s, [%s + %s]\n", c, a, b);
                             }
                             if (i instanceof BitAndInstruction) {
-                                output.printf("\tand %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tand %s, %s\n", c, b);
                             }
                             if (i instanceof BitLeftShiftInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
-                                output.printf("\tshl %s, %s\n", a, NASMRegister.cl);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
+                                output.printf("\tshl %s, %s\n", c, NASMRegister.cl);
                             }
                             if (i instanceof BitOrInstruction) {
-                                output.printf("\tor %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tor %s, %s\n", c, b);
                             }
                             if (i instanceof BitRightShiftInstruction) {
-                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
-                                output.printf("\tsar %s, %s\n", a, NASMRegister.cl);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tmov %s, %s\n", NASMRegister.rcx, b);
+                                output.printf("\tsar %s, %s\n", c, NASMRegister.cl);
                             }
                             if (i instanceof BitXorInstruction) {
-                                output.printf("\txor %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\txor %s, %s\n", c, b);
                             }
                             if (i instanceof DivideInstruction) {
                                 output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
                                 output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", a, b);
-                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, b);
+                                output.printf("\tidiv %s\n", c);
                                 output.printf("\tmov %s, %s\n", c, NASMRegister.rax);
                             }
                             if (i instanceof EqualInstruction) {
@@ -446,28 +444,28 @@ public class SuperTranslator {
                                 output.printf("\tmovzx %s, %s\n", c, NASMRegister.al);
                             }
                             if (i instanceof LogicalAndInstruction) {
-                                output.printf("\tand %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tand %s, %s\n", c, b);
                             }
                             if (i instanceof LogicalOrInstruction) {
-                                output.printf("\tor %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tor %s, %s\n", c, b);
                             }
                             if (i instanceof MinusInstruction) {
-                                output.printf("\tsub %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\tsub %s, %s\n", c, b);
                             }
                             if (i instanceof ModInstruction) {
                                 output.printf("\tmov %s, %s\n", NASMRegister.rax, a);
                                 output.printf("\txor %s, %s\n", NASMRegister.rdx, NASMRegister.rdx);
                                 output.printf("\tcqo\n");
-                                output.printf("\tmov %s, %s\n", a, b);
-                                output.printf("\tidiv %s\n", a);
+                                output.printf("\tmov %s, %s\n", c, b);
+                                output.printf("\tidiv %s\n", c);
                                 output.printf("\tmov %s, %s\n", c, NASMRegister.rdx);
                             }
                             if (i instanceof MulInstruction) {
-                                output.printf("\timul %s, %s\n", a, b);
                                 output.printf("\tmov %s, %s\n", c, a);
+                                output.printf("\timul %s, %s\n", c, b);
                             }
                             if (i instanceof NotEqualInstruction) {
                                 output.printf("\tcmp %s, %s\n", a, b);
@@ -480,15 +478,15 @@ public class SuperTranslator {
 
                     if (instruction instanceof UnaryInstruction) {
                         UnaryInstruction i = (UnaryInstruction)instruction;
-                        PRegister a = superloadToRead(i.source, NASMRegister.tmp1);
+                        PRegister a = loadToRead(i.source, NASMRegister.tmp1);
                         PRegister b = loadToWrite(i.target, NASMRegister.tmp2);
                         if (i instanceof BitNotInstruction) {
-                            output.printf("\tnot %s\n", a);
                             output.printf("\tmov %s, %s\n", b, a);
+                            output.printf("\tnot %s\n", b);
                         }
                         if (i instanceof SelfMinusInstruction) {
-                            output.printf("\tneg %s\n", a);
                             output.printf("\tmov %s, %s\n", b, a);
+                            output.printf("\tneg %s\n", b);
                         }
                         store(i.target, b);
                     }
