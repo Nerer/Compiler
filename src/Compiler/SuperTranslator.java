@@ -616,6 +616,7 @@ public class SuperTranslator {
                         for (int kk = 0; kk < (int)callerRegs.size(); kk++) {
                             output.printf("\tmov %s, qword[rsp+%d]\n", callerRegs.get(kk), callerRegs.get(kk).identity * 8);
                         }
+                        move(NASMRegister.rax, alloc.target);
                     }
 
                     if (i instanceof LoadInstruction) {
